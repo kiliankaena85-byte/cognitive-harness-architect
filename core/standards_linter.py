@@ -48,7 +48,7 @@ class StandardViolation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     standard_id: str = Field(description="Идентификатор стандарта, например RFC_7807 или OWASP_ASVS")
-    ministry_id: int = Field(ge=1, le=7, description="Номер Министерства (1-7)")
+    ministry_id: int = Field(ge=1, le=9, description="Номер Министерства или Модуля (1-9)")
     rule: str = Field(description="Конкретное правило проверки стандарта")
     severity: Literal["CRITICAL", "ERROR", "WARNING"] = Field(description="Критичность нарушения")
     message: str = Field(description="Подробное описание несоответствия")
@@ -125,6 +125,12 @@ class StandardsLinter:
                 ("RAG_TRIAD_METRICS", "Rule 7.6: Cognitive RAG Triad (Relevance, Groundedness/Faithfulness >= 0.95)"),
                 ("GOST_19_201", "Rule 7.7: Software program documentation completeness according to GOST 19.201-78"),
             ],
+            8: [
+                ("SPEC_TO_CODE_SYNTAX", "Rule 8.1: Valid AST and RFC 7807 error models in synthesized code"),
+            ],
+            9: [
+                ("EXECUTABLE_BDD_PASS", "Rule 9.1: 100% pass rate in synthesized BDD test suites"),
+            ],
         }
 
     def lint_node_artifact(self, node_id: int, artifact: Dict[str, Any]) -> StandardsLintResult:
@@ -155,6 +161,12 @@ class StandardsLinter:
         elif node_id == 7:
             violations.extend(self._lint_ministry_7_quality(artifact))
             checks_performed = len(self._standard_rules[7])
+        elif node_id == 8:
+            violations.extend(self._lint_module_8_code(artifact))
+            checks_performed = len(self._standard_rules[8])
+        elif node_id == 9:
+            violations.extend(self._lint_module_9_tests(artifact))
+            checks_performed = len(self._standard_rules[9])
         else:
             violations.append(StandardViolation(
                 standard_id="SYSTEM",
@@ -664,6 +676,42 @@ class StandardsLinter:
                 message="gost_19_201_sections_present is False; pure software documentation sections omitted."
             ))
 
+        return v
+
+    def _lint_module_8_code(self, data: Dict[str, Any]) -> List[StandardViolation]:
+        v: List[StandardViolation] = []
+        if not data.get("all_ast_valid", True):
+            v.append(StandardViolation(
+                standard_id="SPEC_TO_CODE_SYNTAX",
+                ministry_id=8,
+                rule="Rule 8.1: Valid AST and RFC 7807 error models in synthesized code",
+                severity="CRITICAL",
+                message="One or more synthesized source code files failed Python AST parsing."
+            ))
+        files = data.get("files", {})
+        if files and not any("ProblemDetails" in str(f) or "RFC_7807" in str(f) for f in files.values()):
+            v.append(StandardViolation(
+                standard_id="SPEC_TO_CODE_SYNTAX",
+                ministry_id=8,
+                rule="Rule 8.1: Valid AST and RFC 7807 error models in synthesized code",
+                severity="ERROR",
+                message="Synthesized service code does not declare ProblemDetails RFC 7807 error models."
+            ))
+        return v
+
+    def _lint_module_9_tests(self, data: Dict[str, Any]) -> List[StandardViolation]:
+        v: List[StandardViolation] = []
+        success = data.get("success", True)
+        failures = data.get("failures", 0)
+        errors = data.get("errors", 0)
+        if not success or failures > 0 or errors > 0:
+            v.append(StandardViolation(
+                standard_id="EXECUTABLE_BDD_PASS",
+                ministry_id=9,
+                rule="Rule 9.1: 100% pass rate in synthesized BDD test suites",
+                severity="CRITICAL",
+                message=f"Synthesized test suite failed execution: {failures} failures, {errors} errors."
+            ))
         return v
 
     def lint_all_artifacts(self, artifacts_by_node: Dict[int, Dict[str, Any]]) -> Dict[str, Any]:

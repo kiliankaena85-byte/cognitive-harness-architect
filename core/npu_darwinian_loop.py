@@ -505,13 +505,14 @@ class NpuParetoSelector:
         gherkin_acs: Optional[List[Dict[str, Any]]] = None
     ) -> Optional[Dict[str, Any]]:
         """
-        Achievement Scalarizing Function (ASF) Selection over Pareto Non-Dominated Set:
+        Multi-Objective Pareto Selection with Geometric & ASF Utopian Arbitration:
         1. Evaluates all candidates F(h) = (F1, F2, F3, F4, F5).
         2. Strictly disqualifies any candidate with F1 == 0.0 (Boolean Hoare Predicate Filter).
         3. Invokes Tier 1B Decisions API if enabled and multiple viable candidates exist.
         4. Identifies non-dominated candidate subset H_ND under Pareto dominance.
-        5. Computes Wierzbicki Achievement Scalarizing Function (ASF) minimizing regularized
-           Tikhonov-Mahalanobis distance to Utopian Point F* = (1, 1, 1, 1, 1).
+        5. Computes scalarized distance to Utopian Point F* = (1, 1, 1, 1, 1) using adaptive
+           Tikhonov-regularized Mahalanobis distance (Tier A) or Wierzbicki (1982) Augmented
+           Chebyshev Achievement Scalarizing Function (ASF, Tier B).
         """
         if not candidates:
             return None
@@ -642,21 +643,23 @@ class NpuParetoSelector:
         candidate_vecs: List[Tuple[float, float, float, float, float]]
     ) -> List[float]:
         """
-        Computes distances from candidate vectors to Utopian Point.
-        Tier A: Regularized Tikhonov Mahalanobis distance.
-        Tier B: Standardized Euclidean distance (diagonal Mahalanobis).
+        Computes distances from candidate vectors to Utopian Point F* = (1, 1, 1, 1, 1).
+        Tier A: Regularized Adaptive Tikhonov-Mahalanobis distance.
+        Tier B: Wierzbicki's Augmented Chebyshev Achievement Scalarizing Function (ASF 1982).
         Tier C: Standard Euclidean distance.
         """
         M = len(candidate_vecs)
         X = np.array(candidate_vecs, dtype=np.float64)  # Shape (M, 5)
         f_star = np.array(self.utopian_point, dtype=np.float64)  # Shape (5,)
 
-        # Tier A: Regularized Tikhonov Covariance
+        # Tier A: Regularized Adaptive Tikhonov Covariance
         if M >= 2:
             try:
                 cov = np.cov(X, rowvar=False)
-                # Apply Tikhonov ridge regularization lambda = 1e-4
-                cov_reg = cov + 1e-4 * np.eye(5)
+                # Adaptive Tikhonov ridge regularization lambda(Sigma) based on trace
+                trace = float(np.trace(cov))
+                lambda_ridge = max(1e-5, (trace / 5.0) * 1e-3)
+                cov_reg = cov + lambda_ridge * np.eye(5)
                 det = np.linalg.det(cov_reg)
                 if abs(det) > 1e-10:
                     inv_cov = np.linalg.inv(cov_reg)

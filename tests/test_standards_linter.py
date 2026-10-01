@@ -350,5 +350,53 @@ class TestEnsembleLintingAndGateIntegration(unittest.TestCase):
         self.assertTrue(any("faithfulness" in v.message.lower() for v in bad_res.violations))
 
 
+class TestModules8And9Standards(unittest.TestCase):
+    def setUp(self):
+        self.linter = StandardsLinter()
+
+    def test_synthesized_code_valid_passes(self):
+        valid_code_data = {
+            "all_ast_valid": True,
+            "files": {
+                "main.py": "from app_schemas import ProblemDetails\n...",
+                "app_schemas.py": "class ProblemDetails(BaseModel): pass",
+            }
+        }
+        res = self.linter.lint_node_artifact(8, valid_code_data)
+        self.assertTrue(res.is_compliant)
+        self.assertIn("SPEC_TO_CODE_SYNTAX", res.checked_standards)
+
+    def test_synthesized_code_ast_failure(self):
+        bad_code_data = {
+            "all_ast_valid": False,
+            "files": {}
+        }
+        res = self.linter.lint_node_artifact(8, bad_code_data)
+        self.assertFalse(res.is_compliant)
+        self.assertTrue(any(v.standard_id == "SPEC_TO_CODE_SYNTAX" for v in res.violations))
+
+    def test_synthesized_tests_100_percent_pass(self):
+        test_result = {
+            "success": True,
+            "tests_run": 10,
+            "failures": 0,
+            "errors": 0,
+        }
+        res = self.linter.lint_node_artifact(9, test_result)
+        self.assertTrue(res.is_compliant)
+        self.assertIn("EXECUTABLE_BDD_PASS", res.checked_standards)
+
+    def test_synthesized_tests_failure_violation(self):
+        bad_test_result = {
+            "success": False,
+            "tests_run": 10,
+            "failures": 1,
+            "errors": 0,
+        }
+        res = self.linter.lint_node_artifact(9, bad_test_result)
+        self.assertFalse(res.is_compliant)
+        self.assertTrue(any(v.standard_id == "EXECUTABLE_BDD_PASS" for v in res.violations))
+
+
 if __name__ == "__main__":
     unittest.main()
