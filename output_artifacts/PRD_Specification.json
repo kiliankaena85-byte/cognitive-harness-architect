@@ -1,0 +1,50 @@
+{
+  "acceptance_criteria": [
+    {
+      "given": "Kafka stream broker is active",
+      "id": "AC-HT-01",
+      "then": "Events are dispatched asynchronously",
+      "when": "Batch events arrive"
+    },
+    {
+      "given": "Worker pools scale horizontally",
+      "id": "AC-HT-02",
+      "then": "Autoscaler provisions replicas",
+      "when": "Queue depth exceeds 1000"
+    }
+  ],
+  "babok_baccm_aligned": true,
+  "business_rules": [
+    {
+      "description": "Asynchronous ingestion with backpressure signaling",
+      "rule_id": "BR-01",
+      "source_ac_id": "AC-HT-01"
+    },
+    {
+      "description": "Horizontal partition scaling up to 64 consumer threads",
+      "rule_id": "BR-02",
+      "source_ac_id": "AC-HT-02"
+    }
+  ],
+  "gherkin_dialect": "en",
+  "gost_19_espd_sections_defined": true,
+  "gost_7_0_97_requisites": {
+    "approval_stamp": "УТВЕРЖДАЮ",
+    "city": "Москва",
+    "doc_code": "ТЗ-2026.01",
+    "organization": "АО «Когнитивные Системы»"
+  },
+  "iso_29148_syntax_validated": true,
+  "jobs_to_be_done": [
+    "Decompose product requirements",
+    "Guarantee mathematical solvency and security"
+  ],
+  "product_vision": "Autonomous Cognitive Decomposition Engine with Formal Verification Gates",
+  "project_id": "UCDE-Cognitive-Pipeline",
+  "target_document_profile": "GOST_34_AUTOMATED_SYSTEM",
+  "target_personas": [
+    "Enterprise Architect",
+    "Safety Auditor",
+    "Chief Financial Officer"
+  ]
+}

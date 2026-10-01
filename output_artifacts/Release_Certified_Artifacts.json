@@ -1,0 +1,23 @@
+{
+  "brier_score_calibration": 0.039,
+  "cognitive_rag_triad": {
+    "adversarial_jailbreak_resistance_pct": 99.8,
+    "answer_relevance_score": 0.95,
+    "context_relevance_score": 0.94,
+    "groundedness_faithfulness_score": 0.98
+  },
+  "cryptographic_release_signature": "7a8176bbc716f8948e4c2e317f7f20d5bb9b81cebb8155ff5333b0648b38196c",
+  "gost_19_201_sections_present": true,
+  "gost_34_602_all_sections_present": true,
+  "gost_34_603_protocol_id": "ПМИ-34.603-2026-001",
+  "hoare_logic_invariants_verified": 7,
+  "ieee_1012_v_and_v_level": "LEVEL_4",
+  "iso_29119_test_techniques": [
+    "BOUNDARY_VALUE_ANALYSIS",
+    "EQUIVALENCE_PARTITIONING",
+    "MUTATION_TESTING"
+  ],
+  "iso_29148_unambiguity_score": 85.5,
+  "mutation_score_pct": 95.1,
+  "rtm_traceability_coverage_pct": 100.0
+}

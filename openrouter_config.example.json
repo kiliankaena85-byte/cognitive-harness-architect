@@ -1,0 +1,19 @@
+{
+  "api_keys": [
+    "sk-or-v1-YOUR-OPENROUTER-API-KEY-1",
+    "sk-or-v1-YOUR-OPENROUTER-API-KEY-2",
+    "sk-or-v1-YOUR-OPENROUTER-API-KEY-3",
+    "sk-or-v1-YOUR-OPENROUTER-API-KEY-4",
+    "sk-or-v1-YOUR-OPENROUTER-API-KEY-5"
+  ],
+  "models": [
+    "poolside/laguna-s-2.1:free",
+    "thinkingmachines/inkling:free",
+    "cohere/north-mini-code:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "nvidia/nemotron-3.5-content-safety:free"
+  ],
+  "site_url": "https://antigravity.internal",
+  "site_name": "Antigravity Cognitive Engine V&V Audit"
+}

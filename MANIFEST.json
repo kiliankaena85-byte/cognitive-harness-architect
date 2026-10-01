@@ -1,0 +1,90 @@
+{
+  "system_name": "Universal Cognitive Task Decomposition Engine (UCDE)",
+  "version": "2.0.0-PROD",
+  "status": "OPERATIONAL_VERIFIED",
+  "hardware_target": {
+    "cpu": "Intel(R) Core(TM) Ultra 5 125H (14 cores / 18 threads)",
+    "npu": "Intel(R) AI Boost (Meteor Lake VPU 3720, PCI ID 3720)",
+    "system_ram_gb": 16,
+    "npu_budget_mb": 550,
+    "runtime_framework": "OpenVINO 2026.0",
+    "mcp_server": "intel-npu-coprocessor"
+  },
+  "mathematical_foundations": [
+    "Algorithmic Information Theory (Kolmogorov Complexity & Minimum Description Length MDL)",
+    "Statistical Learning Theory (PAC-learning, Bounded VC-Dimension d_VC <= log2(K))",
+    "Social Choice Theory (Arrow's Impossibility Theorem & Gibbard-Satterthwaite Sycophancy Elimination)",
+    "Nonequilibrium Thermodynamics of Computation (Landauer's Principle Delta Q >= kT ln 2)",
+    "Cybernetics & Free Energy Principle (Karl Friston's Active Inference & Markov Blankets)",
+    "Formal Verification (Rice's Theorem, Decidable Subspaces, Mutation Testing against Goodhart's Law)"
+  ],
+  "industry_paradigms_integrated": {
+    "typesafe_ai_jev": "Non-autoregressive System 1 typed decision making (Diogo Almeida, ex-OpenAI)",
+    "figure_ai_helix": "Dual-system cognitive architecture (System 2 Planner + System 1 Real-Time Arbiter)",
+    "physical_intelligence_pi0": "Decoupled Action Expert (300M) on Edge NPU for continuous execution",
+    "openai_prm": "Step-by-step Process Reward Modeling and verification",
+    "nvidia_nemo": "Control Barrier Functions and invariant containment"
+  },
+  "topology": {
+    "macro_ministries_count": 7,
+    "specialist_nodes_count": 28,
+    "arbitration_mechanism": "Lexicographic Multi-Objective Pareto Arbiter (L-MOPA)",
+    "fail_safe_mechanism": "Simplex Architecture with human freeze state",
+    "ministries": [
+      {
+        "id": "MINISTRY_1_STRATEGY_CJM",
+        "name": "Дирекция стратегии, маркетинга и CJM",
+        "contract": "PRD_Specification.json",
+        "stage_gate": "Gate 1: Business Value & Step Invariant",
+        "specialists": ["1.1 User Persona & JTBD", "1.2 CJM Funnel", "1.3 Value Prop", "1.4 Scope Guard"]
+      },
+      {
+        "id": "MINISTRY_2_FINANCE",
+        "name": "Департамент финансов и юнит-экономики",
+        "contract": "Unit_Economics_Budget.json",
+        "stage_gate": "Gate 2: LTV/CAC >= 3.0 & Infra OPEX Cap",
+        "specialists": ["2.1 CAC/LTV Modeler", "2.2 Infra Cost Estimator", "2.3 Gateway Fees", "2.4 Break-Even Forecaster"]
+      },
+      {
+        "id": "MINISTRY_3_LEGAL_COMPLIANCE",
+        "name": "Юридический отдел и регуляторный комплаенс",
+        "contract": "Compliance_Attestation.json",
+        "stage_gate": "Gate 3: Data Sovereignty & License Immunity",
+        "specialists": ["3.1 152-ФЗ/GDPR Officer", "3.2 KYC/AML Auditor", "3.3 License Inspector", "3.4 Terms of Service Formalizer"]
+      },
+      {
+        "id": "MINISTRY_4_INFOSEC",
+        "name": "Департамент информационной безопасности и угроз",
+        "contract": "Security_Policy.agentpolicy",
+        "stage_gate": "Gate 4: Zero Trust & Zero Unauthenticated Endpoints",
+        "specialists": ["4.1 STRIDE Threat Modeler", "4.2 Auth & RBAC Engineer", "4.3 Anti-Fraud & Rate-Limiting", "4.4 Zero-Trust Encryption"]
+      },
+      {
+        "id": "MINISTRY_5_SYSTEM_ARCHITECTURE",
+        "name": "Департамент системного анализа и архитектуры",
+        "contract": "System_Contracts.json",
+        "stage_gate": "Gate 5: OpenAPI 3.1 Strict Typing & Zero Cyclic Graph",
+        "specialists": ["5.1 DB Schema Specialist", "5.2 API Contract Designer", "5.3 Async Event Queues", "5.4 State Machine Formalizer"]
+      },
+      {
+        "id": "MINISTRY_6_HARDWARE_RUNTIME",
+        "name": "Департамент аппаратной оптимизации и рантайма",
+        "contract": "Hardware_Runtime_Manifest.json",
+        "stage_gate": "Gate 6: RAM Budget <= 16GB & NPU Latency <= 50ms",
+        "specialists": ["6.1 Memory Leaks Auditor", "6.2 Intel NPU Offloader", "6.3 Thread Pool Profiler", "6.4 Cold-Start Minimizer"]
+      },
+      {
+        "id": "MINISTRY_7_VV_QUALITY_GATE",
+        "name": "Департамент контроля качества, V&V и сертификации",
+        "contract": "Release_Certified_Artifacts.json",
+        "stage_gate": "Gate 7: Mutation Score >= 0.95 & Brier Score <= 0.04",
+        "specialists": ["7.1 Mutation Testing Auditor", "7.2 E2E Acceptance Synthesizer", "7.3 Brier Calibrator", "7.4 Simplex Release Gatekeeper"]
+      }
+    ]
+  },
+  "entrypoints": {
+    "cli": "C:\\Users\\Артем\\.gemini\\antigravity\\scratch\\project_harness_architect\\cli.py",
+    "arbiter_gateway": "C:\\Users\\Артем\\.gemini\\antigravity\\scratch\\design_arbiter.py",
+    "test_suite": "C:\\Users\\Артем\\.gemini\\antigravity\\scratch\\project_harness_architect\\tests\\test_pipeline.py"
+  }
+}

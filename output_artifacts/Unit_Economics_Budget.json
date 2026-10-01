@@ -1,0 +1,17 @@
+{
+  "break_even_period_months": 16,
+  "currency": "RUB",
+  "customer_acquisition_cost": 50000.0,
+  "finops_focus_version": "1.0",
+  "iso_31000_risk_assessed": true,
+  "lifetime_value": 180000.0,
+  "max_cloud_monthly_opex": 150000.0,
+  "max_hardware_capex": 500000.0,
+  "target_margin_pct": 22.0,
+  "token_economics": {
+    "completion_token_budget": 25000,
+    "context_cache_hit_rate_target_pct": 85.0,
+    "prompt_token_budget": 100000,
+    "target_cost_per_thousand_inferences_rub": 150.0
+  }
+}

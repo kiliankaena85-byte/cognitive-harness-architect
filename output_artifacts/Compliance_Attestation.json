@@ -1,0 +1,30 @@
+{
+  "ai_act_risk_category": "MINIMAL",
+  "approved_open_source_licenses": [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause"
+  ],
+  "fiscal_receipts_54fz": true,
+  "fstec_gis_class": "К2",
+  "fstec_ispdn_level": "NONE",
+  "fstec_kii_category": "КАТЕГОРИЯ_2",
+  "gost_7_0_97_doc_attributes_present": true,
+  "iso_27701_privacy_controls": true,
+  "iso_42001_ai_management": true,
+  "jurisdiction": [
+    "RUS",
+    "EAEU"
+  ],
+  "personal_data": {
+    "data_subjects": [
+      "Clients",
+      "Operators"
+    ],
+    "fz152_level": "NONE",
+    "gdpr_dpa_required": false,
+    "localization_country": "RUS",
+    "processes_personal_data": false
+  },
+  "spdx_license_standard": "SPDX-2.3"
+}

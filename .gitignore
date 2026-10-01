@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Testing & Hypothesis
+.hypothesis/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Sensitive Configuration & API Keys
+openrouter_config.json
+
+# Temporary & Local Scratch
+.agents/
+scratch/
+artifacts_out/
+generated_output/
+generated_self_audit/
+*.tmp
+*.log
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
