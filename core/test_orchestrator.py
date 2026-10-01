@@ -95,6 +95,7 @@ from core.orchestrator import (
     CycleDetectedError,
     GlobalBudgetExhaustedError,
     SagaVetoError,
+    SagaCompensationTimeoutError,
     ZeroTrustGateFailure,
     CANONICAL_FILENAMES,
     NODE_SCHEMAS,
@@ -476,6 +477,28 @@ class TestTherac25SagaCompensation(unittest.TestCase):
 
         # Node 5 staged for re-generation
         self.assertEqual(self.orchestrator.fsm_states[5], NodeState.STATE_SYSTEM2_GENERATE.value)
+
+        # Phase 2: Assert bidirectional handshake acknowledgment was recorded
+        self.assertEqual(len(self.orchestrator.compensation_handshakes), 1)
+        hs = self.orchestrator.compensation_handshakes[0]
+        self.assertEqual(hs["vetoing_node"], 6)
+        self.assertEqual(hs["target_node"], 5)
+        self.assertTrue(hs["acknowledged"])
+        self.assertGreaterEqual(hs["fencing_token"], 1000)
+
+    def test_saga_compensation_timeout_exceeded(self):
+        """Verifies SagaCompensationTimeoutError is raised when deadline is exceeded."""
+        self.orchestrator.compensation_timeout_sec = 0.0  # Force instant timeout
+        self.orchestrator.registry.register(5, {"endpoints": []}, CANONICAL_FILENAMES[5])
+        self.orchestrator._force_fsm_state(5, NodeState.STATE_COMMITTED)
+
+        with self.assertRaises(SagaCompensationTimeoutError):
+            self.orchestrator.execute_saga_compensation(
+                vetoing_node=6,
+                target_node=5,
+                prescription="Therac-25 timeout test",
+                hazard_code="THERAC_TIMEOUT",
+            )
 
     def test_mock_generator_evolves_endpoint_on_therac_prescription(self):
         """Verifies mock generator evolve() appends /api/v1/hardware/interlock-status."""

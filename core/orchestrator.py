@@ -118,6 +118,11 @@ class SagaVetoError(Exception):
         self.hazard_code = hazard_code or "CROSS_MINISTRY_VETO"
 
 
+class SagaCompensationTimeoutError(RuntimeError):
+    """Raised when compensating transaction execution exceeds configured deadline."""
+    pass
+
+
 class ZeroTrustGateFailure(Exception):
     """Raised when a deterministic verification gate rejects an artifact."""
     def __init__(self, gate_name: str, message: str, details: Optional[Dict[str, Any]] = None):
@@ -824,6 +829,10 @@ class DagOrchestrator:
         self.artifacts: Dict[str, Any] = {}
         self.execution_history: List[Dict[str, Any]] = []
 
+        # Saga compensation safety & handshakes (Phase 2 Cohere / Therac-25 audit)
+        self.compensation_timeout_sec: float = 5.0
+        self.compensation_handshakes: List[Dict[str, Any]] = []
+
         # Budget counters
         self.retry_counts: Dict[int, int] = {i: 0 for i in range(1, 8)}
         self.global_iteration_k: int = 0
@@ -879,12 +888,15 @@ class DagOrchestrator:
     ) -> None:
         """
         Executes compensating transaction C_k:
-        1. Invalidates target node artifact.
-        2. Records compensation in saga_compensations_executed.
-        3. Transitions target node to STATE_SAGA_COMPENSATION.
-        4. Transitive multi-step rollback: purges all descendants in reverse topological order.
-        5. Transitions target node to STATE_SYSTEM2_GENERATE.
+        1. Checks compensation deadline against self.compensation_timeout_sec.
+        2. Invalidates target node artifact.
+        3. Records compensation in saga_compensations_executed.
+        4. Transitions target node to STATE_SAGA_COMPENSATION.
+        5. Transitive multi-step rollback: purges all descendants in reverse topological order.
+        6. Transitions target node to STATE_SYSTEM2_GENERATE.
+        7. Records bidirectional handshake acknowledgment in self.compensation_handshakes.
         """
+        start_comp_t = time.time()
         self.global_iteration_k += 1
         if self.global_iteration_k > self.max_global_iterations:
             self._force_fsm_state(target_node, NodeState.STATE_TERMINAL_FAILED, "Global budget K_max exceeded")
@@ -950,6 +962,11 @@ class DagOrchestrator:
 
         # Invalidate all downstream transitive descendants from leaves to target
         for desc_id in reverse_topo_descendants:
+            if (time.time() - start_comp_t) >= self.compensation_timeout_sec:
+                raise SagaCompensationTimeoutError(
+                    f"Compensating transaction between Node {vetoing_node} and Node {target_node} "
+                    f"exceeded deadline of {self.compensation_timeout_sec}s during cascade rollback"
+                )
             self.registry.invalidate(desc_id)
             desc_fname = CANONICAL_FILENAMES.get(desc_id)
             if desc_fname and desc_fname in self.artifacts:
@@ -975,12 +992,32 @@ class DagOrchestrator:
                 )
             self.retry_counts[desc_id] = 0
 
+        # Check deadline before transitioning to generate
+        if (time.time() - start_comp_t) >= self.compensation_timeout_sec:
+            raise SagaCompensationTimeoutError(
+                f"Compensating transaction between Node {vetoing_node} and Node {target_node} "
+                f"exceeded deadline of {self.compensation_timeout_sec}s"
+            )
+
         # Transition target node to re-generate with prescription
         self._sync_fsm_state(
             target_node,
             NodeState.STATE_SYSTEM2_GENERATE,
             reason="Re-generating hypothesis under saga prescription",
         )
+
+        # Record bidirectional handshake acknowledgment
+        handshake_record = {
+            "vetoing_node": vetoing_node,
+            "target_node": target_node,
+            "hazard_code": hazard_code or "SAGA_COMPENSATION",
+            "prescription": prescription,
+            "acknowledged": True,
+            "fencing_token": self.fencing_token,
+            "timestamp": time.time(),
+            "duration_sec": time.time() - start_comp_t,
+        }
+        self.compensation_handshakes.append(handshake_record)
 
     def apply_simplex_downgrade(self, node_id: int, reason: str = "") -> Dict[str, Any]:
         """
