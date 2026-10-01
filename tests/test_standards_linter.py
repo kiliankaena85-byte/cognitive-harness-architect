@@ -128,6 +128,13 @@ class TestMinistry3LegalStandards(unittest.TestCase):
         self.assertFalse(res.is_compliant)
         self.assertTrue(any(v.severity == "CRITICAL" and "152-FZ" in v.rule for v in res.violations))
 
+    def test_data_localization_rf_false_critical_violation(self):
+        bad = copy.deepcopy(self.valid_artifact)
+        bad["personal_data"]["data_localization_rf"] = False
+        res = self.linter.lint_node_artifact(3, bad)
+        self.assertFalse(res.is_compliant)
+        self.assertTrue(any(v.severity == "CRITICAL" and "Primary Localization in RF" in v.rule for v in res.violations))
+
     def test_unacceptable_ai_act_prohibited(self):
         bad = copy.deepcopy(self.valid_artifact)
         bad["ai_act_risk_category"] = "UNACCEPTABLE"
@@ -281,6 +288,15 @@ class TestMinistry7QualityStandards(unittest.TestCase):
         res = self.linter.lint_node_artifact(7, bad)
         self.assertFalse(res.is_compliant)
         self.assertTrue(any("GOST_19_201" in v.standard_id for v in res.violations))
+
+    def test_smt_formal_proofs_validation(self):
+        bad = copy.deepcopy(self.valid_artifact)
+        bad["formal_proof_certificates"] = {
+            "Theorem_3_Therac25_Temporal_Safety": {"is_valid": False, "status": "COUNTEREXAMPLE_FOUND"}
+        }
+        res = self.linter.lint_node_artifact(7, bad)
+        self.assertFalse(res.is_compliant)
+        self.assertTrue(any("SMT_FORMAL_PROOFS" in v.standard_id for v in res.violations))
 
 
 class TestEnsembleLintingAndGateIntegration(unittest.TestCase):

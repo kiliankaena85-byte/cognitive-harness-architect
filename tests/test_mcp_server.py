@@ -27,7 +27,7 @@ class TestMcpServer(unittest.TestCase):
         self.assertEqual(resp["id"], 1)
         res = resp["result"]
         self.assertEqual(res["serverInfo"]["name"], "cognitive-harness-architect")
-        self.assertEqual(res["serverInfo"]["version"], "1.3.0")
+        self.assertEqual(res["serverInfo"]["version"], "1.5.0")
         self.assertIn("tools", res["capabilities"])
 
     def test_jsonrpc_tools_list(self):
@@ -107,6 +107,30 @@ class TestMcpServer(unittest.TestCase):
         payload = json.loads(resp["result"]["content"][0]["text"])
         self.assertTrue(payload["winner_found"])
         self.assertEqual(payload["candidates_count"], 2)
+
+    def test_jsonrpc_tool_call_verify_formal_invariants(self):
+        req = {
+            "jsonrpc": "2.0",
+            "id": 6,
+            "method": "tools/call",
+            "params": {
+                "name": "verify_formal_invariants",
+                "arguments": {
+                    "theorem": "financial_solvency",
+                    "arguments": {
+                        "cac": 100.0,
+                        "arpu_monthly": 80.0,
+                        "gross_margin": 0.85,
+                    },
+                },
+            },
+        }
+        resp = self.server.handle_jsonrpc_request(req)
+        self.assertFalse(resp["result"]["isError"])
+        payload = json.loads(resp["result"]["content"][0]["text"])
+        self.assertTrue(payload["is_valid"])
+        self.assertEqual(payload["theorem_name"], "Theorem_4_Financial_Solvency")
+        self.assertIn("Z3", payload["solver_engine"])
 
     def test_jsonrpc_invalid_method(self):
         req = {

@@ -488,7 +488,7 @@ class TestTherac25SagaCompensation(unittest.TestCase):
 
     def test_saga_compensation_timeout_exceeded(self):
         """Verifies SagaCompensationTimeoutError is raised when deadline is exceeded."""
-        self.orchestrator.compensation_timeout_sec = 0.0  # Force instant timeout
+        self.orchestrator.compensation_timeout_sec = -0.01  # Guaranteed timeout trigger
         self.orchestrator.registry.register(5, {"endpoints": []}, CANONICAL_FILENAMES[5])
         self.orchestrator._force_fsm_state(5, NodeState.STATE_COMMITTED)
 

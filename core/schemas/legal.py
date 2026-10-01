@@ -15,6 +15,23 @@ class PersonalDataProcessing(BaseModel):
     processes_personal_data: bool = Field(description="Признак обработки персональных данных")
     data_subjects: List[str] = Field(default_factory=list, description="Субъекты персональных данных")
     localization_country: str = Field(default="RUS", description="Страна первичной локализации баз данных")
+    data_localization_rf: bool = Field(default=True, description="Требование первичной локализации баз данных на территории РФ (242-ФЗ)")
+    personal_data_categories: List[Literal["ОБЩИЕ", "СПЕЦИАЛЬНЫЕ", "БИОМЕТРИЧЕСКИЕ", "ОБЩЕДОСТУПНЫЕ"]] = Field(
+        default_factory=lambda: ["ОБЩИЕ"],
+        description="Категории обрабатываемых персональных данных по ст. 10, 11 152-ФЗ"
+    )
+    cross_border_transfer_allowed: bool = Field(
+        default=False,
+        description="Разрешение трансграничной передачи ПДн (ст. 12 152-ФЗ)"
+    )
+    crypto_algorithm: Literal[
+        "ГОСТ_Р_34.12-2015_КУЗНЕЧИК",
+        "ГОСТ_Р_34.12-2015_МАГМА",
+        "AES-256-GCM"
+    ] = Field(
+        default="ГОСТ_Р_34.12-2015_КУЗНЕЧИК",
+        description="Алгоритм криптографической защиты данных (ФСТЭК/ФСБ)"
+    )
     fz152_level: Literal["УЗ-1", "УЗ-2", "УЗ-3", "УЗ-4", "NONE"] = Field(
         description="Уровень защищенности ИСПДн по 152-ФЗ"
     )

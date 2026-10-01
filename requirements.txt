@@ -1,0 +1,8 @@
+# Universal Cognitive Decomposition Engine (UCDE) Dependencies
+pydantic>=2.5.0
+numpy>=1.24.0
+networkx>=3.0
+z3-solver>=5.0.0
+requests>=2.28.0
+# Optional / Recommended
+openvino>=2024.0.0; platform_system=="Windows" or platform_system=="Linux"

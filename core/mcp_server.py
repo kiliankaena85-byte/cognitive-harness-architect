@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .cognitive_memory import CognitiveMemoryStore
 from .code_synthesizer import CodeSynthesizer
+from .formal_verifier import FormalVerifier
 from .graph_rag import GraphRAGEngine
 from .npu_darwinian_loop import NpuParetoSelector
 from .sandbox_runner import SandboxRunner
@@ -44,7 +45,7 @@ class McpServer:
     """
 
     SERVER_NAME = "cognitive-harness-architect"
-    SERVER_VERSION = "1.3.0"
+    SERVER_VERSION = "1.5.0"
     PROTOCOL_VERSION = "2024-11-05"
 
     def __init__(
@@ -54,12 +55,14 @@ class McpServer:
         npu_selector: Optional[NpuParetoSelector] = None,
         code_synthesizer: Optional[CodeSynthesizer] = None,
         sandbox_runner: Optional[SandboxRunner] = None,
+        formal_verifier: Optional[FormalVerifier] = None,
     ):
         self.memory: CognitiveMemoryStore = memory_store or CognitiveMemoryStore()
         self.linter: StandardsLinter = linter or StandardsLinter()
         self.npu_selector: NpuParetoSelector = npu_selector or NpuParetoSelector()
         self.code_synth: CodeSynthesizer = code_synthesizer or CodeSynthesizer()
         self.sandbox: SandboxRunner = sandbox_runner or SandboxRunner()
+        self.formal_verifier: FormalVerifier = formal_verifier or FormalVerifier()
 
         self._tools: Dict[str, Tuple[McpToolDefinition, Callable[[Dict[str, Any]], Dict[str, Any]]]] = {}
         self._register_default_tools()
@@ -173,6 +176,23 @@ class McpServer:
             self._handle_trace_lineage,
         )
 
+        # 7. verify_formal_invariants
+        self.register_tool(
+            McpToolDefinition(
+                name="verify_formal_invariants",
+                description="Executes mathematical first-order logic and Z3 SMT solver proofs across 5 architectural invariants (CIDR non-collision, DAG acyclicity, Therac-25 temporal safety, financial solvency, STRIDE completeness).",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "theorem": {"type": "string", "enum": ["network_cidr", "acyclic_dag", "therac25", "financial_solvency", "stride_coverage"], "description": "Theorem to prove"},
+                        "arguments": {"type": "object", "description": "Theorem specific parameters"},
+                    },
+                    "required": ["theorem", "arguments"],
+                },
+            ),
+            self._handle_verify_formal_invariants,
+        )
+
     def register_tool(
         self,
         definition: McpToolDefinition,
@@ -248,6 +268,37 @@ class McpServer:
         if trace:
             return trace.model_dump()
         return {"found": False, "start_id": args["start_id"], "target_id": args["target_id"]}
+
+    def _handle_verify_formal_invariants(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        thm = args["theorem"]
+        a = args.get("arguments", {})
+        if thm == "network_cidr":
+            cert = self.formal_verifier.prove_network_cidr_non_collision(a.get("service_subnets", []))
+        elif thm == "acyclic_dag":
+            cert = self.formal_verifier.prove_acyclic_dependency_graph(a.get("components", []), a.get("dependencies", {}))
+        elif thm == "therac25":
+            cert = self.formal_verifier.prove_therac25_temporal_safety(
+                t_poll_ms=float(a.get("t_poll_ms", 10.0)),
+                t_sw_ms=float(a.get("t_sw_ms", 20.0)),
+                t_lock_ms=float(a.get("t_lock_ms", 10.0)),
+                t_hw_actuation_ms=float(a.get("t_hw_actuation_ms", 1500.0)),
+                hardware_interlock_enforced=bool(a.get("hardware_interlock_enforced", False)),
+            )
+        elif thm == "financial_solvency":
+            cert = self.formal_verifier.prove_financial_solvency(
+                cac=float(a.get("cac", 100.0)),
+                arpu_monthly=float(a.get("arpu_monthly", 80.0)),
+                gross_margin=float(a.get("gross_margin", 0.85)),
+            )
+        elif thm == "stride_coverage":
+            cert = self.formal_verifier.prove_stride_threat_coverage(
+                active_endpoints=a.get("active_endpoints", []),
+                stride_mitigations=a.get("stride_mitigations", []),
+            )
+        else:
+            raise ValueError(f"Unknown theorem: '{thm}'")
+
+        return cert.model_dump()
 
     # =========================================================================
     # JSON-RPC 2.0 Protocol Dispatcher

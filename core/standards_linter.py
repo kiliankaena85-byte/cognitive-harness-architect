@@ -124,6 +124,7 @@ class StandardsLinter:
                 ("CRYPTOGRAPHIC_RELEASE", "Rule 7.5: SHA-256 tamper-proof digest of release artifacts"),
                 ("RAG_TRIAD_METRICS", "Rule 7.6: Cognitive RAG Triad (Relevance, Groundedness/Faithfulness >= 0.95)"),
                 ("GOST_19_201", "Rule 7.7: Software program documentation completeness according to GOST 19.201-78"),
+                ("SMT_FORMAL_PROOFS", "Rule 7.8: Formal mathematical proof certificates verified via Z3 SMT solver"),
             ],
             8: [
                 ("SPEC_TO_CODE_SYNTAX", "Rule 8.1: Valid AST and RFC 7807 error models in synthesized code"),
@@ -327,6 +328,14 @@ class StandardsLinter:
                     rule="152-FZ Primary Localization",
                     severity="CRITICAL",
                     message=f"Primary personal data localization must be 'RUS', got '{loc}'."
+                ))
+            if not pd.get("data_localization_rf", True):
+                v.append(StandardViolation(
+                    standard_id="FZ_152",
+                    ministry_id=3,
+                    rule="152-FZ Primary Localization in RF",
+                    severity="CRITICAL",
+                    message="Primary database for Russian personal data must be localized in the Russian Federation (152-FZ / 242-FZ)."
                 ))
 
         ai_risk = data.get("ai_act_risk_category", "")
@@ -675,6 +684,19 @@ class StandardsLinter:
                 severity="ERROR",
                 message="gost_19_201_sections_present is False; pure software documentation sections omitted."
             ))
+
+        if "formal_proof_certificates" in data:
+            certs = data.get("formal_proof_certificates", {})
+            if isinstance(certs, dict):
+                invalid_theorems = [name for name, c in certs.items() if not c.get("is_valid", False)]
+                if invalid_theorems:
+                    v.append(StandardViolation(
+                        standard_id="SMT_FORMAL_PROOFS",
+                        ministry_id=7,
+                        rule="Z3 SMT Invariant Verification",
+                        severity="CRITICAL",
+                        message=f"One or more formal theorems failed verification: {', '.join(invalid_theorems)}."
+                    ))
 
         return v
 

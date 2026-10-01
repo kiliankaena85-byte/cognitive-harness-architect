@@ -68,17 +68,19 @@ class GostStandardsCompiler:
 
         return {
             "project_title": project_title,
-            "standard": "ГОСТ 34.602-89 / ISO/IEC/IEEE 29148:2018",
+            "standard": "ГОСТ 34.602-89 / ISO/IEC/IEEE 29148:2018 / ГОСТ 34.603-92",
             "markdown_path": str(md_filename),
             "docx_path": str(docx_filename) if docx_filename else "DOCX generator skipped",
             "sections_count": 8,
             "traceability_matrix_items": len(doc_model["traceability_matrix"]),
+            "data_dictionary_items": len(doc_model["data_dictionary"]),
+            "pmi_items": len(doc_model["acceptance_criteria_pmi"]),
             "compilation_time_ms": elapsed_ms,
             "hardware_device": self.npu.device_name
         }
 
     def _build_gost_model(self, brief: Dict[str, Any]) -> Dict[str, Any]:
-        """Maps JSON contracts to the exact 8 sections of ГОСТ 34.602-89."""
+        """Maps JSON contracts to the exact 8 sections of ГОСТ 34.602-89, Data Dictionary, and PMI."""
         title = brief.get("project_title", "Высоконагруженная SMM-платформа")
         actors = brief.get("core_actors", [])
         admin_tabs = brief.get("admin_panel_subsystems", [])
@@ -96,6 +98,27 @@ class GostStandardsCompiler:
             {"id": "REQ-SUP-006", "name": "Тикет-система поддержки с привязкой к ID транзакции (SLA 4ч)", "source": "Выбор trade-off B", "actor": "Саппорт", "test_ref": "TC-SUP-06"},
             {"id": "REQ-HW-007",  "name": "Лимит оперативной памяти <= 16 ГБ RAM и квантование INT8", "source": "Профиль Meteor Lake", "actor": "Hardware", "test_ref": "TC-HW-07"},
             {"id": "REQ-QA-008",  "name": "Мутационная приемочная сертификация тестов (Score >= 0.95)", "source": "V&V Quality Gate", "actor": "QA Аудитор", "test_ref": "TC-QA-08"}
+        ]
+
+        # Formal Data Dictionary (Приложение Б: Словарь сущностей и данных / ISO 29148)
+        data_dict = [
+            {"term": "Customer Journey Map (CJM)", "type": "Бизнес-модель", "definition": "Сквозной сценарий пути пользователя (гость/клиент) с момента ввода целевой ссылки до подтверждения выполнения заказа."},
+            {"term": "Neural Processing Unit (NPU)", "type": "Аппаратный ресурс", "definition": "Физический встроенный тензорный ускоритель Intel AI Boost VPU для детерминированного инференса моделей принятия решений."},
+            {"term": "L-MOPA Pareto Arbiter", "type": "Алгоритмический модуль", "definition": "Лексикографический многокритериальный арбитр отбора оптимальных проектных гипотез по Парето-фронту с адаптивной регуляризацией Тихонова."},
+            {"term": "Saga Distributed Transaction", "type": "Архитектурный паттерн", "definition": "Паттерн распределенных компенсирующих транзакций C_k с гарантированным каскадным откатом и предотвращением race conditions (Therac-25)."},
+            {"term": "STRIDE Threat Model", "type": "Модель безопасности", "definition": "Классификатор векторов атак (Spoofing, Tampering, Repudiation, Information Disclosure, DoS, Elevation of Privilege) с маппингом на БДУ ФСТЭК."},
+            {"term": "Personal Data Record (152-ФЗ)", "type": "Юридическая сущность", "definition": "Запись ПДн субъекта с обязательной первичной локализацией на серверах РФ, категоризацией и шифрованием ГОСТ Р 34.12-2015."},
+            {"term": "Transactional Outbox", "type": "Паттерн надежности", "definition": "Атомарное сохранение исходящих событий во внешней БД для гарантированной доставки провайдерам без риска потери транзакции."},
+            {"term": "Mutation Testing Score", "type": "Метрика качества V&V", "definition": "Доля зафиксированных и уничтоженных искусственных мутаций в кодовой базе (целевой порог >= 0.95)."}
+        ]
+
+        # Acceptance Criteria & PMI (Приложение В: Программа и методика испытаний ГОСТ 34.603-92)
+        pmi_tests = [
+            {"id": "ПМИ-01", "name": "Ультрабыстрый инференс классификации URL на NPU", "method": "Подача 1000 тестовых ссылок социальных сетей", "expected": "Время инференса t <= 1.0 мс, Brier score <= 0.04, точность 100%"},
+            {"id": "ПМИ-02", "name": "Откат саги при аппаратной коллизии (Therac-25)", "method": "Инъекция задержки привода > 1000 мс без флага hardware_interlocks_required", "expected": "Вето Node 6 -> откат Node 5, фиксация квитанции рукопожатия, дедлайн t < 5.0 с"},
+            {"id": "ПМИ-03", "name": "Контроль суверенитета данных 152-ФЗ / 242-ФЗ", "method": "Попытка передачи локализации баз за пределы РФ (localization_country != 'RUS')", "expected": "Генерация CRITICAL нарушения StandardsLinter, блокировка релиза"},
+            {"id": "ПМИ-04", "name": "Мутационная аттестация тестового набора", "method": "Прогон мутационного движка CddTddHarnessEngine по Hoare {P} S {Q}", "expected": "Mutation Score >= 0.95, отсутствие фиктивных тестов"},
+            {"id": "ПМИ-05", "name": "Защита от финансового исчерпания (Denial-of-Wallet)", "method": "Симуляция превышения лимита вызовов LLM API", "expected": "Жесткая блокировка при превышении порога $5.00 с кодом GlobalBudgetExhaustedError"}
         ]
 
         return {
@@ -178,7 +201,8 @@ class GostStandardsCompiler:
                         "6.2. Критерии приемки:\n"
                         "  - Mutation Testing Score >= 0.95 (отсутствие фиктивных проверок assert True);\n"
                         "  - Brier Calibration Score NPU-арбитра <= 0.04;\n"
-                        "  - Успешное выполнение 100% сквозных BDD-сценариев из файла Release_Certified_Artifacts.json."
+                        "  - Успешное выполнение 100% сквозных BDD-сценариев из файла Release_Certified_Artifacts.json;\n"
+                        "  - 100% соответствие требованиям Программы и методики испытаний (ПМИ, см. Приложение В)."
                     )
                 },
                 {
@@ -191,14 +215,16 @@ class GostStandardsCompiler:
                     )
                 }
             ],
-            "traceability_matrix": rtm
+            "traceability_matrix": rtm,
+            "data_dictionary": data_dict,
+            "acceptance_criteria_pmi": pmi_tests
         }
 
     def _render_markdown(self, model: Dict[str, Any]) -> str:
         """Renders formal Markdown version conforming to GOST 34.602-89."""
         lines = [
             "# ТЕХНИЧЕСКОЕ ЗАДАНИЕ НА СОЗДАНИЕ АВТОМАТИЗИРОВАННОЙ СИСТЕМЫ",
-            f"### Соответствует требованиям ГОСТ 34.602-89 и ISO/IEC/IEEE 29148:2018",
+            f"### Соответствует требованиям ГОСТ 34.602-89, ISO/IEC/IEEE 29148:2018 и ГОСТ 34.603-92",
             f"**Наименование системы:** {model['title']}",
             f"**Шифр документа:** {model['cipher']}",
             f"**Дата утверждения:** {model['year']} г.",
@@ -209,12 +235,26 @@ class GostStandardsCompiler:
             lines.append(f"## {sec['num']}. {sec['title']}")
             lines.append(f"{sec['content']}\n")
 
-        # Section 8: Traceability Matrix
+        # Section 8: Traceability Matrix (Приложение А)
         lines.append("## 8. ПРИЛОЖЕНИЕ А: МАТРИЦА ТРАССИРУЕМОСТИ ТРЕБОВАНИЙ (ISO/IEC/IEEE 29148 RTM)")
         lines.append("| Идентификатор | Требование | Источник требования | Роль / Актор | Ссылка на тест |")
         lines.append("| :--- | :--- | :--- | :--- | :--- |")
         for row in model["traceability_matrix"]:
             lines.append(f"| `{row['id']}` | {row['name']} | {row['source']} | {row['actor']} | `{row['test_ref']}` |")
+
+        # Section 9: Data Dictionary (Приложение Б)
+        lines.append("\n## 9. ПРИЛОЖЕНИЕ Б: ФОРМАЛЬНЫЙ СЛОВАРЬ ДАННЫХ И СУЩНОСТЕЙ (ISO 29148 DATA DICTIONARY)")
+        lines.append("| Термин / Сущность | Тип данных / Модель | Определение и инвариант |")
+        lines.append("| :--- | :--- | :--- |")
+        for entry in model.get("data_dictionary", []):
+            lines.append(f"| **{entry['term']}** | `{entry['type']}` | {entry['definition']} |")
+
+        # Section 10: Acceptance Criteria / PMI (Приложение В)
+        lines.append("\n## 10. ПРИЛОЖЕНИЕ В: ПРОГРАММА И МЕТОДИКА ИСПЫТАНИЙ (ГОСТ 34.603-92 ПМИ)")
+        lines.append("| Пункт ПМИ | Наименование испытания | Метод контроля | Ожидаемый результат / Критерий приемки |")
+        lines.append("| :--- | :--- | :--- | :--- |")
+        for pmi in model.get("acceptance_criteria_pmi", []):
+            lines.append(f"| `{pmi['id']}` | {pmi['name']} | {pmi['method']} | {pmi['expected']} |")
 
         lines.append("\n---\n")
         lines.append("*Документ автоматически скомпилирован системой Universal Cognitive Task Decomposition Engine на базе Intel(R) AI Boost NPU.*")
@@ -241,7 +281,7 @@ class GostStandardsCompiler:
 
         sub_p = doc.add_paragraph()
         sub_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run_sub = sub_p.add_run(f"«{model['title']}»\nШифр: {model['cipher']}\nГОСТ 34.602-89 / ISO 29148:2018\n")
+        run_sub = sub_p.add_run(f"«{model['title']}»\nШифр: {model['cipher']}\nГОСТ 34.602-89 / ISO 29148:2018 / ГОСТ 34.603-92\n")
         run_sub.font.size = Pt(12)
         run_sub.font.name = "Arial"
 
@@ -278,6 +318,53 @@ class GostStandardsCompiler:
             row_cells[3].text = row_data["actor"]
             row_cells[4].text = row_data["test_ref"]
             for c in row_cells:
+                for p in c.paragraphs:
+                    for run in p.runs:
+                        run.font.size = Pt(9.0)
+
+        # Data Dictionary Table (Приложение Б)
+        doc.add_heading("9. ПРИЛОЖЕНИЕ Б: СЛОВАРЬ ДАННЫХ И СУЩНОСТЕЙ (ISO 29148 DATA DICTIONARY)", level=1)
+        dict_table = doc.add_table(rows=1, cols=3)
+        dict_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        dict_hdr_cells = dict_table.rows[0].cells
+        dict_headers = ["Термин / Сущность", "Тип данных / Модель", "Определение и инвариант"]
+        for i, header_text in enumerate(dict_headers):
+            dict_hdr_cells[i].text = header_text
+            for p in dict_hdr_cells[i].paragraphs:
+                for run in p.runs:
+                    run.font.bold = True
+                    run.font.size = Pt(9.5)
+
+        for entry in model.get("data_dictionary", []):
+            d_cells = dict_table.add_row().cells
+            d_cells[0].text = entry["term"]
+            d_cells[1].text = entry["type"]
+            d_cells[2].text = entry["definition"]
+            for c in d_cells:
+                for p in c.paragraphs:
+                    for run in p.runs:
+                        run.font.size = Pt(9.0)
+
+        # Acceptance Criteria / PMI Table (Приложение В)
+        doc.add_heading("10. ПРИЛОЖЕНИЕ В: ПРОГРАММА И МЕТОДИКА ИСПЫТАНИЙ (ГОСТ 34.603-92 ПМИ)", level=1)
+        pmi_table = doc.add_table(rows=1, cols=4)
+        pmi_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        pmi_hdr_cells = pmi_table.rows[0].cells
+        pmi_headers = ["ID", "Испытание", "Метод контроля", "Критерий приемки"]
+        for i, header_text in enumerate(pmi_headers):
+            pmi_hdr_cells[i].text = header_text
+            for p in pmi_hdr_cells[i].paragraphs:
+                for run in p.runs:
+                    run.font.bold = True
+                    run.font.size = Pt(9.5)
+
+        for pmi_entry in model.get("acceptance_criteria_pmi", []):
+            p_cells = pmi_table.add_row().cells
+            p_cells[0].text = pmi_entry["id"]
+            p_cells[1].text = pmi_entry["name"]
+            p_cells[2].text = pmi_entry["method"]
+            p_cells[3].text = pmi_entry["expected"]
+            for c in p_cells:
                 for p in c.paragraphs:
                     for run in p.runs:
                         run.font.size = Pt(9.0)

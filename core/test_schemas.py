@@ -479,6 +479,47 @@ class TestLegalComplianceContract(unittest.TestCase):
                     gdpr_dpa_required=False,
                 )
 
+    def test_fz152_regulatory_fields(self):
+        """Verifies 152-FZ / FSTEC regulatory fields on PersonalDataProcessing."""
+        # Defaults
+        pd_default = PersonalDataProcessing(
+            processes_personal_data=True,
+            data_subjects=["Users"],
+            localization_country="RUS",
+            fz152_level="УЗ-2",
+            gdpr_dpa_required=False,
+        )
+        self.assertTrue(pd_default.data_localization_rf)
+        self.assertEqual(pd_default.personal_data_categories, ["ОБЩИЕ"])
+        self.assertFalse(pd_default.cross_border_transfer_allowed)
+        self.assertEqual(pd_default.crypto_algorithm, "ГОСТ_Р_34.12-2015_КУЗНЕЧИК")
+
+        # Custom valid configurations
+        pd_custom = PersonalDataProcessing(
+            processes_personal_data=True,
+            data_subjects=["Employees", "Clients"],
+            localization_country="RUS",
+            data_localization_rf=True,
+            personal_data_categories=["ОБЩИЕ", "СПЕЦИАЛЬНЫЕ", "БИОМЕТРИЧЕСКИЕ"],
+            cross_border_transfer_allowed=True,
+            crypto_algorithm="ГОСТ_Р_34.12-2015_МАГМА",
+            fz152_level="УЗ-1",
+            gdpr_dpa_required=True,
+        )
+        self.assertEqual(len(pd_custom.personal_data_categories), 3)
+        self.assertEqual(pd_custom.crypto_algorithm, "ГОСТ_Р_34.12-2015_МАГМА")
+        self.assertTrue(pd_custom.cross_border_transfer_allowed)
+
+        # Invalid category rejection
+        with self.assertRaises(ValidationError):
+            PersonalDataProcessing(
+                processes_personal_data=True,
+                data_subjects=["Users"],
+                localization_country="RUS",
+                personal_data_categories=["INVALID_CATEGORY"],
+                fz152_level="УЗ-2",
+            )
+
     def test_eu_ai_act_risk_category(self):
         payload = make_valid_legal_payload()
 
