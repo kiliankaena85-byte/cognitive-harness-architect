@@ -27,7 +27,7 @@ class TestMcpServer(unittest.TestCase):
         self.assertEqual(resp["id"], 1)
         res = resp["result"]
         self.assertEqual(res["serverInfo"]["name"], "cognitive-harness-architect")
-        self.assertEqual(res["serverInfo"]["version"], "1.5.0")
+        self.assertEqual(res["serverInfo"]["version"], "2.0.0")
         self.assertIn("tools", res["capabilities"])
 
     def test_jsonrpc_tools_list(self):
@@ -46,6 +46,9 @@ class TestMcpServer(unittest.TestCase):
         self.assertIn("synthesize_and_run_tests", tool_names)
         self.assertIn("query_cognitive_memory", tool_names)
         self.assertIn("trace_architectural_lineage", tool_names)
+        self.assertIn("verify_formal_invariants", tool_names)
+        self.assertIn("execute_bft_consensus", tool_names)
+        self.assertIn("verify_canary_deployment", tool_names)
 
     def test_jsonrpc_tool_call_lint_specification(self):
         req = {
@@ -131,6 +134,44 @@ class TestMcpServer(unittest.TestCase):
         self.assertTrue(payload["is_valid"])
         self.assertEqual(payload["theorem_name"], "Theorem_4_Financial_Solvency")
         self.assertIn("Z3", payload["solver_engine"])
+
+    def test_jsonrpc_tool_call_execute_bft_consensus(self):
+        req = {
+            "jsonrpc": "2.0",
+            "id": 7,
+            "method": "tools/call",
+            "params": {
+                "name": "execute_bft_consensus",
+                "arguments": {
+                    "proposal_id": "PROP-BFT-01",
+                    "proposed_artifact": {"service_name": "payment", "replicated": True},
+                },
+            },
+        }
+        resp = self.server.handle_jsonrpc_request(req)
+        self.assertFalse(resp["result"]["isError"])
+        payload = json.loads(resp["result"]["content"][0]["text"])
+        self.assertTrue(payload["consensus_reached"])
+        self.assertEqual(payload["state"], "STATE_COMMITTED")
+        self.assertEqual(payload["quorum_required"], 3)
+
+    def test_jsonrpc_tool_call_verify_canary_deployment(self):
+        req = {
+            "jsonrpc": "2.0",
+            "id": 8,
+            "method": "tools/call",
+            "params": {
+                "name": "verify_canary_deployment",
+                "arguments": {
+                    "release_version": "v2.0.0",
+                },
+            },
+        }
+        resp = self.server.handle_jsonrpc_request(req)
+        self.assertFalse(resp["result"]["isError"])
+        payload = json.loads(resp["result"]["content"][0]["text"])
+        self.assertTrue(payload["promoted_to_production"])
+        self.assertEqual(payload["status"], "SUCCESS_PROMOTED")
 
     def test_jsonrpc_invalid_method(self):
         req = {

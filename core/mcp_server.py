@@ -22,6 +22,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .cognitive_memory import CognitiveMemoryStore
 from .code_synthesizer import CodeSynthesizer
+from .consensus_engine import BftConsensusEngine
+from .canary_deployer import CanaryDeployer
 from .formal_verifier import FormalVerifier
 from .graph_rag import GraphRAGEngine
 from .npu_darwinian_loop import NpuParetoSelector
@@ -45,7 +47,7 @@ class McpServer:
     """
 
     SERVER_NAME = "cognitive-harness-architect"
-    SERVER_VERSION = "1.5.0"
+    SERVER_VERSION = "2.0.0"
     PROTOCOL_VERSION = "2024-11-05"
 
     def __init__(
@@ -56,6 +58,8 @@ class McpServer:
         code_synthesizer: Optional[CodeSynthesizer] = None,
         sandbox_runner: Optional[SandboxRunner] = None,
         formal_verifier: Optional[FormalVerifier] = None,
+        consensus_engine: Optional[BftConsensusEngine] = None,
+        canary_deployer: Optional[CanaryDeployer] = None,
     ):
         self.memory: CognitiveMemoryStore = memory_store or CognitiveMemoryStore()
         self.linter: StandardsLinter = linter or StandardsLinter()
@@ -63,6 +67,8 @@ class McpServer:
         self.code_synth: CodeSynthesizer = code_synthesizer or CodeSynthesizer()
         self.sandbox: SandboxRunner = sandbox_runner or SandboxRunner()
         self.formal_verifier: FormalVerifier = formal_verifier or FormalVerifier()
+        self.consensus_engine: BftConsensusEngine = consensus_engine or BftConsensusEngine()
+        self.canary_deployer: CanaryDeployer = canary_deployer or CanaryDeployer()
 
         self._tools: Dict[str, Tuple[McpToolDefinition, Callable[[Dict[str, Any]], Dict[str, Any]]]] = {}
         self._register_default_tools()
@@ -193,6 +199,44 @@ class McpServer:
             self._handle_verify_formal_invariants,
         )
 
+        # 8. execute_bft_consensus
+        self.register_tool(
+            McpToolDefinition(
+                name="execute_bft_consensus",
+                description="Coordinates Practical Byzantine Fault Tolerance (PBFT) voting round across heterogeneous foundation models (Claude, GPT-4o, Gemini, Llama) with 2f+1 quorum.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "proposal_id": {"type": "string", "description": "Unique identifier for the proposed contract modification"},
+                        "proposed_artifact": {"type": "object", "description": "The candidate artifact dictionary to be voted on"},
+                    },
+                    "required": ["proposal_id", "proposed_artifact"],
+                },
+            ),
+            self._handle_execute_bft_consensus,
+        )
+
+        # 9. verify_canary_deployment
+        self.register_tool(
+            McpToolDefinition(
+                name="verify_canary_deployment",
+                description="Simulates progressive 3-stage canary deployment (10% -> 50% -> 100%) and verifies real-time SLA/SLO error budgets with automated circuit breaker rollback.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "release_version": {"type": "string", "description": "Release semantic version tag, e.g. 'v2.0.0'"},
+                        "stage_telemetries": {
+                            "type": "array",
+                            "items": {"type": "object"},
+                            "description": "Optional custom telemetry metrics per stage for testing or telemetry feed",
+                        },
+                    },
+                    "required": ["release_version"],
+                },
+            ),
+            self._handle_verify_canary_deployment,
+        )
+
     def register_tool(
         self,
         definition: McpToolDefinition,
@@ -299,6 +343,18 @@ class McpServer:
             raise ValueError(f"Unknown theorem: '{thm}'")
 
         return cert.model_dump()
+
+    def _handle_execute_bft_consensus(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        proposal_id = args["proposal_id"]
+        proposed_artifact = args["proposed_artifact"]
+        cert = self.consensus_engine.execute_consensus_round(proposal_id, proposed_artifact)
+        return cert.model_dump()
+
+    def _handle_verify_canary_deployment(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        release_version = args["release_version"]
+        stage_telemetries = args.get("stage_telemetries")
+        attestation = self.canary_deployer.execute_progressive_rollout(release_version, stage_telemetries)
+        return attestation.model_dump()
 
     # =========================================================================
     # JSON-RPC 2.0 Protocol Dispatcher
