@@ -40,9 +40,27 @@ from .generators import (
     SpdxLicenseGuard,
     DastCognitiveFuzzer,
     SelfRagEngine,
+    UXFallbackEngine,
+    UXAutomationLevel,
+    IAS38Auditor,
+    ExpenseItem,
+    CapitalizationChecklist,
+    ISO42001AuditGenerator,
+    Gost56939Auditor,
+    FstecAssuranceLevel,
+    PersistentSagaEngine,
 )
-from .hardware import OpenVinoDmaOptimizer, ChaosFaultInjector
-from .quality import RagTriadEvaluator, GostPmiGenerator
+from .hardware import (
+    OpenVinoDmaOptimizer,
+    ChaosFaultInjector,
+    WatchdogCircuitSynthesizer,
+    WatchdogWindowConfig,
+)
+from .quality import (
+    RagTriadEvaluator,
+    GostPmiGenerator,
+    CIFormalAuditStand,
+)
 
 
 class McpToolDefinition(BaseModel):
@@ -61,7 +79,7 @@ class McpServer:
     """
 
     SERVER_NAME = "cognitive-harness-architect"
-    SERVER_VERSION = "2.3.0"
+    SERVER_VERSION = "2.4.0"
     PROTOCOL_VERSION = "2024-11-05"
 
     def __init__(
@@ -88,6 +106,13 @@ class McpServer:
         self_rag_engine: Optional[SelfRagEngine] = None,
         chaos_injector: Optional[ChaosFaultInjector] = None,
         gost_pmi_gen: Optional[GostPmiGenerator] = None,
+        ux_fallback_engine: Optional[UXFallbackEngine] = None,
+        ias38_auditor: Optional[IAS38Auditor] = None,
+        iso42001_gen: Optional[ISO42001AuditGenerator] = None,
+        gost56939_auditor: Optional[Gost56939Auditor] = None,
+        saga_engine: Optional[PersistentSagaEngine] = None,
+        watchdog_synth: Optional[WatchdogCircuitSynthesizer] = None,
+        ci_formal_audit: Optional[CIFormalAuditStand] = None,
     ):
         self.memory: CognitiveMemoryStore = memory_store or CognitiveMemoryStore()
         self.linter: StandardsLinter = linter or StandardsLinter()
@@ -111,12 +136,19 @@ class McpServer:
         self.self_rag_engine: SelfRagEngine = self_rag_engine or SelfRagEngine()
         self.chaos_injector: ChaosFaultInjector = chaos_injector or ChaosFaultInjector()
         self.gost_pmi_gen: GostPmiGenerator = gost_pmi_gen or GostPmiGenerator()
+        self.ux_fallback_engine: UXFallbackEngine = ux_fallback_engine or UXFallbackEngine()
+        self.ias38_auditor: IAS38Auditor = ias38_auditor or IAS38Auditor()
+        self.iso42001_gen: ISO42001AuditGenerator = iso42001_gen or ISO42001AuditGenerator()
+        self.gost56939_auditor: Gost56939Auditor = gost56939_auditor or Gost56939Auditor()
+        self.saga_engine: PersistentSagaEngine = saga_engine or PersistentSagaEngine()
+        self.watchdog_synth: WatchdogCircuitSynthesizer = watchdog_synth or WatchdogCircuitSynthesizer()
+        self.ci_formal_audit: CIFormalAuditStand = ci_formal_audit or CIFormalAuditStand()
 
         self._tools: Dict[str, Tuple[McpToolDefinition, Callable[[Dict[str, Any]], Dict[str, Any]]]] = {}
         self._register_default_tools()
 
     def _register_default_tools(self) -> None:
-        """Registers the 23 core architectural, engineering, and autonomous agent tools."""
+        """Registers the 30 core architectural, engineering, state certification, and autonomous agent tools."""
 
         # 1. lint_specification
         self.register_tool(
@@ -541,6 +573,130 @@ class McpServer:
             self._handle_generate_gost_pmi,
         )
 
+        # 24. generate_ux_fallback_plan
+        self.register_tool(
+            McpToolDefinition(
+                name="generate_ux_fallback_plan",
+                description="Generates ISO 9241-210 compliant adaptive UX degradation statecharts, evaluating confidence thresholds (C < 0.70) and creating Human-in-the-Loop (HITL) handover dossiers.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "system_name": {"type": "string", "default": "Universal Cognitive Engine", "description": "System name"},
+                        "confidence": {"type": "number", "default": 0.88, "description": "Current AI model confidence score [0.0 - 1.0]"},
+                        "latency_ms": {"type": "number", "default": 25.0, "description": "Current inference latency in ms"},
+                        "error_rate": {"type": "number", "default": 0.0, "description": "Current system error rate"},
+                        "hardware_fault": {"type": "boolean", "default": False, "description": "Whether hardware watchdog has tripped"},
+                    },
+                },
+            ),
+            self._handle_generate_ux_fallback_plan,
+        )
+
+        # 25. audit_ias38_intangible_assets
+        self.register_tool(
+            McpToolDefinition(
+                name="audit_ias38_intangible_assets",
+                description="Audits AI and software investments against IAS 38 and IFRS 15, verifying 6 cumulative criteria for CAPEX capitalization vs OPEX research expensing and generating amortization schedules.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "project_name": {"type": "string", "default": "Cognitive Harness Architect", "description": "Project or AI model name"},
+                        "audit_date": {"type": "string", "default": "2026-10-01", "description": "Audit date (YYYY-MM-DD)"},
+                        "expenses": {"type": "array", "items": {"type": "object"}, "description": "List of expense items {item_id, description, phase, amount_rub, cost_category}"},
+                        "checklist": {"type": "object", "description": "6 IAS 38.57 criteria"},
+                        "useful_life_months": {"type": "integer", "default": 36, "description": "Useful life in months for amortization"},
+                    },
+                },
+            ),
+            self._handle_audit_ias38,
+        )
+
+        # 26. generate_iso42001_aims_dossier
+        self.register_tool(
+            McpToolDefinition(
+                name="generate_iso42001_aims_dossier",
+                description="Generates ISO/IEC 42001:2023 Artificial Intelligence Management System (AIMS) certification documentation, Statement of Applicability (SoA Annex A controls), and AI Impact Assessment.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "system_name": {"type": "string", "default": "Universal Cognitive Decomposition Engine", "description": "System name"},
+                    },
+                },
+            ),
+            self._handle_generate_iso42001_aims,
+        )
+
+        # 27. generate_gost56939_dossier
+        self.register_tool(
+            McpToolDefinition(
+                name="generate_gost56939_dossier",
+                description="Generates ГОСТ Р 56939-2024 safe software development assurance dossier for FSTEC/FSB state certification (ОУД/УД 1-6, SAST/DAST evidence, binary hardening, Streebog seal).",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "system_name": {"type": "string", "default": "Cognitive Harness Architect", "description": "System name"},
+                        "target_level": {"type": "string", "enum": ["УД 1", "УД 2", "УД 3", "УД 4", "УД 5", "УД 6"], "default": "УД 4", "description": "Target FSTEC trust level"},
+                        "release_sha256": {"type": "string", "default": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "description": "SHA-256 hash of release artifact"},
+                        "mean_latency_us": {"type": "number", "default": 11.07, "description": "Measured rejection latency in microseconds"},
+                    },
+                },
+            ),
+            self._handle_generate_gost56939,
+        )
+
+        # 28. orchestrate_persistent_saga
+        self.register_tool(
+            McpToolDefinition(
+                name="orchestrate_persistent_saga",
+                description="Orchestrates distributed Saga transactions with SQLite Write-Ahead Log (WAL), Transactional Outbox pattern, and crash-recovery replay.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "saga_id": {"type": "string", "description": "Unique Saga ID"},
+                        "saga_name": {"type": "string", "default": "Cross-Ministry Transaction", "description": "Name of the saga"},
+                        "steps": {"type": "array", "items": {"type": "object"}, "description": "List of steps {step_id, step_name, forward_action, compensation_action, input_payload}"},
+                        "fail_at_step_id": {"type": "string", "description": "Optional step ID to simulate failure and trigger compensation"},
+                    },
+                    "required": ["saga_id"],
+                },
+            ),
+            self._handle_orchestrate_persistent_saga,
+        )
+
+        # 29. synthesize_watchdog_circuit
+        self.register_tool(
+            McpToolDefinition(
+                name="synthesize_watchdog_circuit",
+                description="Synthesizes synthesizable Verilog-2001 and VHDL testbench for independent hardware windowed watchdog (MAX6369) with physical interlock latch.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "min_window_ms": {"type": "number", "default": 50.0, "description": "Minimum window duration in ms"},
+                        "max_window_ms": {"type": "number", "default": 200.0, "description": "Maximum window duration in ms"},
+                        "system_clock_mhz": {"type": "number", "default": 50.0, "description": "Target FPGA clock frequency in MHz"},
+                    },
+                },
+            ),
+            self._handle_synthesize_watchdog_circuit,
+        )
+
+        # 30. run_ci_formal_audit
+        self.register_tool(
+            McpToolDefinition(
+                name="run_ci_formal_audit",
+                description="Runs automated first-order logic & Z3 SMT solver theorem proving over hard system invariants (Therac-25, Venture economics, NPU RAM, AI Act) and mints cryptographic release seal.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "system_name": {"type": "string", "default": "Cognitive Harness Architect", "description": "System name"},
+                        "commit_sha": {"type": "string", "default": "HEAD", "description": "Commit SHA or tree hash to certify"},
+                        "telemetry": {"type": "object", "description": "System telemetry parameters for proof checking"},
+                    },
+                },
+            ),
+            self._handle_run_ci_formal_audit,
+        )
+
     def register_tool(
         self,
         definition: McpToolDefinition,
@@ -802,6 +958,144 @@ class McpServer:
             "pmi_document": doc.model_dump(),
             "markdown": self.gost_pmi_gen.to_markdown(doc),
         }
+
+    def _handle_generate_ux_fallback_plan(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        sname = args.get("system_name", "Universal Cognitive Engine")
+        conf = float(args.get("confidence", 0.88))
+        lat = float(args.get("latency_ms", 25.0))
+        err = float(args.get("error_rate", 0.0))
+        fault = bool(args.get("hardware_fault", False))
+
+        level = self.ux_fallback_engine.evaluate_telemetry(conf, lat, err, fault)
+        plan = self.ux_fallback_engine.generate_default_plan(system_name=sname)
+        plan.current_level = level
+
+        mermaid_diag = self.ux_fallback_engine.export_mermaid_statechart(plan)
+        if level in [UXAutomationLevel.HITL_CONFIRMATION, UXAutomationLevel.DETERMINISTIC_FALLBACK, UXAutomationLevel.EMERGENCY_OPERATOR_TAKEOVER]:
+            handover = self.ux_fallback_engine.create_handover_dossier(
+                confidence=conf,
+                state_hash="b7f94c1a2e3d",
+                conflicts=["Model confidence below threshold; manual operator review required."],
+            )
+            plan.hitl_dossier = handover
+
+        return {
+            "current_automation_level": level.value,
+            "plan": plan.model_dump(),
+            "mermaid_statechart": mermaid_diag,
+        }
+
+    def _handle_audit_ias38(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        pname = args.get("project_name", "Cognitive Harness Architect")
+        adate = args.get("audit_date", "2026-10-01")
+        life = int(args.get("useful_life_months", 36))
+        raw_expenses = args.get("expenses", [
+            {"item_id": "EXP-01", "description": "Prompt exploration & LLM evaluation", "phase": "RESEARCH", "amount_rub": 450000.0, "cost_category": "Compute_Cloud", "is_directly_attributable": True},
+            {"item_id": "EXP-02", "description": "Deterministic Core & NPU Pipeline Development", "phase": "DEVELOPMENT", "amount_rub": 3200000.0, "cost_category": "Personnel_RND", "is_directly_attributable": True},
+            {"item_id": "EXP-03", "description": "Zero-Trust Compiler & Formal Verifier", "phase": "DEVELOPMENT", "amount_rub": 1800000.0, "cost_category": "Tooling", "is_directly_attributable": True},
+        ])
+        expenses = [ExpenseItem(**e) for e in raw_expenses]
+
+        raw_chk = args.get("checklist", {
+            "technical_feasibility": True,
+            "intention_to_complete": True,
+            "ability_to_use_or_sell": True,
+            "probable_future_benefits": True,
+            "resource_availability": True,
+            "reliable_cost_measurement": True,
+        })
+        checklist = CapitalizationChecklist(**raw_chk)
+
+        auditor = IAS38Auditor(useful_life_months=life)
+        dossier = auditor.audit_project(pname, adate, expenses, checklist)
+        return {"dossier": dossier.model_dump()}
+
+    def _handle_generate_iso42001_aims(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        sname = args.get("system_name", "Universal Cognitive Decomposition Engine")
+        dossier = self.iso42001_gen.generate_dossier(system_name=sname)
+        return {"aims_dossier": dossier.model_dump()}
+
+    def _handle_generate_gost56939(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        sname = args.get("system_name", "Cognitive Harness Architect")
+        lvl_str = args.get("target_level", "УД 4")
+        r_sha = args.get("release_sha256", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        lat = float(args.get("mean_latency_us", 11.07))
+        dossier = self.gost56939_auditor.generate_dossier(
+            system_name=sname,
+            target_level=FstecAssuranceLevel(lvl_str),
+            release_sha256=r_sha,
+            mean_latency_us=lat,
+        )
+        return {"gost56939_dossier": dossier.model_dump()}
+
+    def _handle_orchestrate_persistent_saga(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        import time as _t
+        sid = args["saga_id"]
+        sname = args.get("saga_name", "Cross-Ministry Transaction")
+        raw_steps = args.get("steps", [
+            {"step_id": "STEP-01", "step_name": "Reserve_Budget", "forward_action": "reserve()", "compensation_action": "release()", "input_payload": {"amount": 50000}},
+            {"step_id": "STEP-02", "step_name": "Allocate_DMA_RAM", "forward_action": "allocate()", "compensation_action": "free()", "input_payload": {"bytes": 1048576}},
+            {"step_id": "STEP-03", "step_name": "Sign_Release_Manifest", "forward_action": "sign()", "compensation_action": "revoke()", "input_payload": {"version": "2.4.0"}},
+        ])
+        fail_at = args.get("fail_at_step_id")
+
+        saga = PersistentSagaEngine(":memory:")
+        saga.start_saga(sid, sname)
+
+        executed_steps = []
+        for s in raw_steps:
+            rec = saga.add_step(
+                saga_id=sid,
+                step_id=s["step_id"],
+                step_name=s["step_name"],
+                forward_action=s["forward_action"],
+                compensation_action=s["compensation_action"],
+                input_payload=s.get("input_payload", {}),
+            )
+            if fail_at and s["step_id"] == fail_at:
+                compensated = saga.fail_and_compensate(s["step_id"], error_reason=f"Simulated fault at {fail_at}")
+                rep = saga.recover_and_replay(sid)
+                return {
+                    "saga_id": sid,
+                    "status": "ABORTED_COMPENSATED",
+                    "compensated_steps": compensated,
+                    "replay_report": rep.model_dump(),
+                }
+            else:
+                saga.commit_step(s["step_id"], {"status": "SUCCESS", "timestamp": _t.time()})
+                executed_steps.append(rec.step_id)
+
+        rep = saga.recover_and_replay(sid)
+        return {
+            "saga_id": sid,
+            "status": "COMMITTED",
+            "executed_steps": executed_steps,
+            "replay_report": rep.model_dump(),
+        }
+
+    def _handle_synthesize_watchdog_circuit(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        min_w = float(args.get("min_window_ms", 50.0))
+        max_w = float(args.get("max_window_ms", 200.0))
+        clk = float(args.get("system_clock_mhz", 50.0))
+        cfg = WatchdogWindowConfig(min_window_ms=min_w, max_window_ms=max_w, system_clock_mhz=clk)
+        rtl = self.watchdog_synth.synthesize(cfg)
+        return {"synthesized_rtl": rtl.model_dump()}
+
+    def _handle_run_ci_formal_audit(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        sname = args.get("system_name", "Cognitive Harness Architect")
+        csha = args.get("commit_sha", "HEAD-RELEASE-2026")
+        telem = args.get("telemetry", {
+            "actuator_latency_ms": 25.0,
+            "interlock_engaged": False,
+            "ltv": 450000.0,
+            "cac": 120000.0,
+            "break_even_months": 12,
+            "npu_ram_mb": 256,
+            "dma_pinned": True,
+            "ai_act_risk": "HIGH_RISK",
+        })
+        rep = self.ci_formal_audit.run_full_formal_audit(system_name=sname, commit_sha=csha, telemetry=telem)
+        return {"audit_report": rep.model_dump()}
 
     # =========================================================================
     # JSON-RPC 2.0 Protocol Dispatcher
