@@ -17,7 +17,7 @@ Exposes Cognitive Tools to Claude, Gemini, Antigravity, and Cursor:
 
 import json
 import sys
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from pydantic import BaseModel, ConfigDict, Field
 
 from .cognitive_memory import CognitiveMemoryStore
@@ -29,6 +29,15 @@ from .graph_rag import GraphRAGEngine
 from .npu_darwinian_loop import NpuParetoSelector
 from .sandbox_runner import SandboxRunner
 from .standards_linter import StandardsLinter
+from .generators import (
+    ServiceBlueprintGenerator,
+    FinopsFocusExporter,
+    EuAiActDossierGenerator,
+    SpiffeSpireGenerator,
+    C4DslExporter,
+)
+from .hardware import OpenVinoDmaOptimizer
+from .quality import RagTriadEvaluator
 
 
 class McpToolDefinition(BaseModel):
@@ -47,7 +56,7 @@ class McpServer:
     """
 
     SERVER_NAME = "cognitive-harness-architect"
-    SERVER_VERSION = "2.0.0"
+    SERVER_VERSION = "2.2.0"
     PROTOCOL_VERSION = "2024-11-05"
 
     def __init__(
@@ -60,6 +69,13 @@ class McpServer:
         formal_verifier: Optional[FormalVerifier] = None,
         consensus_engine: Optional[BftConsensusEngine] = None,
         canary_deployer: Optional[CanaryDeployer] = None,
+        service_blueprint_gen: Optional[ServiceBlueprintGenerator] = None,
+        finops_focus_exporter: Optional[FinopsFocusExporter] = None,
+        ai_act_dossier_gen: Optional[EuAiActDossierGenerator] = None,
+        spiffe_spire_gen: Optional[SpiffeSpireGenerator] = None,
+        c4_dsl_exporter: Optional[C4DslExporter] = None,
+        rag_triad_evaluator: Optional[RagTriadEvaluator] = None,
+        openvino_dma_opt: Optional[OpenVinoDmaOptimizer] = None,
     ):
         self.memory: CognitiveMemoryStore = memory_store or CognitiveMemoryStore()
         self.linter: StandardsLinter = linter or StandardsLinter()
@@ -69,12 +85,19 @@ class McpServer:
         self.formal_verifier: FormalVerifier = formal_verifier or FormalVerifier()
         self.consensus_engine: BftConsensusEngine = consensus_engine or BftConsensusEngine()
         self.canary_deployer: CanaryDeployer = canary_deployer or CanaryDeployer()
+        self.service_blueprint_gen: ServiceBlueprintGenerator = service_blueprint_gen or ServiceBlueprintGenerator()
+        self.finops_focus_exporter: FinopsFocusExporter = finops_focus_exporter or FinopsFocusExporter()
+        self.ai_act_dossier_gen: EuAiActDossierGenerator = ai_act_dossier_gen or EuAiActDossierGenerator()
+        self.spiffe_spire_gen: SpiffeSpireGenerator = spiffe_spire_gen or SpiffeSpireGenerator()
+        self.c4_dsl_exporter: C4DslExporter = c4_dsl_exporter or C4DslExporter()
+        self.rag_triad_evaluator: RagTriadEvaluator = rag_triad_evaluator or RagTriadEvaluator()
+        self.openvino_dma_opt: OpenVinoDmaOptimizer = openvino_dma_opt or OpenVinoDmaOptimizer()
 
         self._tools: Dict[str, Tuple[McpToolDefinition, Callable[[Dict[str, Any]], Dict[str, Any]]]] = {}
         self._register_default_tools()
 
     def _register_default_tools(self) -> None:
-        """Registers the 6 core architectural tools."""
+        """Registers the 16 core architectural and engineering tools."""
 
         # 1. lint_specification
         self.register_tool(
@@ -237,6 +260,128 @@ class McpServer:
             self._handle_verify_canary_deployment,
         )
 
+        # 10. generate_service_blueprint
+        self.register_tool(
+            McpToolDefinition(
+                name="generate_service_blueprint",
+                description="Generates standard 5-swimlane NN/g Service Blueprint (Customer Actions, Frontstage, Backstage, Support, Physical Evidence) with PlantUML and Markdown formats.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "strategy_artifact": {"type": "object", "description": "StrategyCJMContract dictionary"},
+                        "project_id": {"type": "string", "default": "PROJ-COGNITIVE-001", "description": "Project identifier"},
+                    },
+                    "required": ["strategy_artifact"],
+                },
+            ),
+            self._handle_generate_service_blueprint,
+        )
+
+        # 11. export_finops_focus
+        self.register_tool(
+            McpToolDefinition(
+                name="export_finops_focus",
+                description="Transforms Finance/Budget contract into FinOps Open Cost and Usage Specification (FOCUS 1.0) standard schema and RFC 4180 CSV / JSON formats.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "finance_artifact": {"type": "object", "description": "FinanceBudgetContract dictionary"},
+                        "export_format": {"type": "string", "enum": ["json", "csv", "both"], "default": "both", "description": "Format for exported data"},
+                    },
+                    "required": ["finance_artifact"],
+                },
+            ),
+            self._handle_export_finops_focus,
+        )
+
+        # 12. generate_ai_act_dossier
+        self.register_tool(
+            McpToolDefinition(
+                name="generate_ai_act_dossier",
+                description="Synthesizes complete EU AI Act Annex IV Technical Documentation dossier (Articles 9, 10, 14, 15) with cryptographic SHA-256 seal.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "legal_artifact": {"type": "object", "description": "LegalComplianceContract dictionary"},
+                        "strategy_artifact": {"type": "object", "description": "StrategyCJMContract dictionary"},
+                        "security_artifact": {"type": "object", "description": "SecurityPolicyContract dictionary"},
+                        "hardware_artifact": {"type": "object", "description": "HardwareRuntimeContract dictionary"},
+                        "quality_artifact": {"type": "object", "description": "VVQualityContract dictionary"},
+                        "system_name": {"type": "string", "default": "Universal Cognitive Decomposition Engine (UCDE)", "description": "Name of AI system"},
+                    },
+                    "required": ["legal_artifact", "strategy_artifact", "security_artifact", "hardware_artifact", "quality_artifact"],
+                },
+            ),
+            self._handle_generate_ai_act_dossier,
+        )
+
+        # 13. generate_spiffe_spire
+        self.register_tool(
+            McpToolDefinition(
+                name="generate_spiffe_spire",
+                description="Generates SPIFFE/SPIRE workload identities (spiffe://cognitive.internal/...), SVID X.509 profiles, SPIRE Server/Agent HCL and Envoy mTLS proxy configurations.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "security_artifact": {"type": "object", "description": "Optional SecurityPolicyContract dictionary"},
+                    },
+                },
+            ),
+            self._handle_generate_spiffe_spire,
+        )
+
+        # 14. export_c4_dsl
+        self.register_tool(
+            McpToolDefinition(
+                name="export_c4_dsl",
+                description="Transforms SystemAnalysisContract into standard Structurizr C4-DSL (Context, Container, Component views).",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "analysis_artifact": {"type": "object", "description": "SystemAnalysisContract dictionary"},
+                        "strategy_artifact": {"type": "object", "description": "Optional StrategyCJMContract dictionary"},
+                    },
+                    "required": ["analysis_artifact"],
+                },
+            ),
+            self._handle_export_c4_dsl,
+        )
+
+        # 15. evaluate_rag_triad
+        self.register_tool(
+            McpToolDefinition(
+                name="evaluate_rag_triad",
+                description="Deterministic DeepEval evaluation of Cognitive RAG Triad: Context Relevance (>=0.85), Faithfulness/Groundedness (>=0.95), Answer Relevance (>=0.90), and Adversarial Jailbreak Resistance (>=98%).",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "User prompt or query"},
+                        "contexts": {"type": "array", "items": {"type": "string"}, "description": "Retrieved context passages"},
+                        "answer": {"type": "string", "description": "Generated model response"},
+                        "adversarial_prompts": {"type": "array", "items": {"type": "string"}, "description": "Optional list of adversarial jailbreak test prompts"},
+                    },
+                    "required": ["query", "contexts", "answer"],
+                },
+            ),
+            self._handle_evaluate_rag_triad,
+        )
+
+        # 16. benchmark_openvino_dma
+        self.register_tool(
+            McpToolDefinition(
+                name="benchmark_openvino_dma",
+                description="Benchmarks Intel Meteor Lake zero-copy DMA pinned buffer allocation vs standard memory copy, verifying RAM <= 512 MB and sub-millisecond latency SLA.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "iterations": {"type": "integer", "default": 200, "description": "Benchmark iterations"},
+                        "tensor_dim": {"type": "integer", "default": 1024, "description": "Tensor dimension"},
+                    },
+                },
+            ),
+            self._handle_benchmark_openvino_dma,
+        )
+
     def register_tool(
         self,
         definition: McpToolDefinition,
@@ -355,6 +500,67 @@ class McpServer:
         stage_telemetries = args.get("stage_telemetries")
         attestation = self.canary_deployer.execute_progressive_rollout(release_version, stage_telemetries)
         return attestation.model_dump()
+
+    def _handle_generate_service_blueprint(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        strat = args["strategy_artifact"]
+        pid = args.get("project_id", "PROJ-COGNITIVE-001")
+        bp = self.service_blueprint_gen.generate(strat, project_id=pid)
+        return {
+            "blueprint": bp.model_dump(),
+            "plantuml": self.service_blueprint_gen.to_plantuml(bp),
+            "markdown": self.service_blueprint_gen.to_markdown(bp),
+        }
+
+    def _handle_export_finops_focus(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        fin = args["finance_artifact"]
+        fmt = args.get("export_format", "both")
+        ds = self.finops_focus_exporter.export_from_contract(fin)
+        res: Dict[str, Any] = {"dataset": ds.model_dump()}
+        if fmt in ["csv", "both"]:
+            res["csv"] = self.finops_focus_exporter.to_csv(ds)
+        if fmt in ["json", "both"]:
+            res["json"] = self.finops_focus_exporter.to_json(ds)
+        return res
+
+    def _handle_generate_ai_act_dossier(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        sys_name = args.get("system_name", "Universal Cognitive Decomposition Engine (UCDE)")
+        dossier = self.ai_act_dossier_gen.generate(
+            legal_artifact=args["legal_artifact"],
+            strategy_artifact=args["strategy_artifact"],
+            security_artifact=args["security_artifact"],
+            hardware_artifact=args["hardware_artifact"],
+            quality_artifact=args["quality_artifact"],
+            system_name=sys_name,
+        )
+        return {
+            "dossier": dossier.model_dump(),
+            "markdown": self.ai_act_dossier_gen.to_markdown(dossier),
+        }
+
+    def _handle_generate_spiffe_spire(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        sec = args.get("security_artifact")
+        manifest = self.spiffe_spire_gen.generate(sec)
+        return manifest.model_dump()
+
+    def _handle_export_c4_dsl(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        analysis = args["analysis_artifact"]
+        strategy = args.get("strategy_artifact")
+        dsl = self.c4_dsl_exporter.export(analysis, strategy)
+        return {"c4_dsl": dsl}
+
+    def _handle_evaluate_rag_triad(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        rep = self.rag_triad_evaluator.evaluate_full_rag(
+            query=args["query"],
+            contexts=args["contexts"],
+            answer=args["answer"],
+            adversarial_prompts=args.get("adversarial_prompts"),
+        )
+        return rep.model_dump()
+
+    def _handle_benchmark_openvino_dma(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        iters = int(args.get("iterations", 200))
+        dim = int(args.get("tensor_dim", 1024))
+        return self.openvino_dma_opt.benchmark_dma_vs_copy(iterations=iters, tensor_dim=dim)
 
     # =========================================================================
     # JSON-RPC 2.0 Protocol Dispatcher

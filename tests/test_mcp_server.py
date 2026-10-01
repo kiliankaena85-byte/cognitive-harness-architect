@@ -27,7 +27,7 @@ class TestMcpServer(unittest.TestCase):
         self.assertEqual(resp["id"], 1)
         res = resp["result"]
         self.assertEqual(res["serverInfo"]["name"], "cognitive-harness-architect")
-        self.assertEqual(res["serverInfo"]["version"], "2.0.0")
+        self.assertEqual(res["serverInfo"]["version"], McpServer.SERVER_VERSION)
         self.assertIn("tools", res["capabilities"])
 
     def test_jsonrpc_tools_list(self):

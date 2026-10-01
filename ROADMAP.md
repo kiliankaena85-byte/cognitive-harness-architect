@@ -1,10 +1,10 @@
 # Strategic Roadmap & Departmental Deep Evolution (2026–2027)
 ## Project: Cognitive Harness Architect (Universal Cognitive Decomposition Engine — UCDE v2.0.0+)
 
-[![Release](https://img.shields.io/badge/Release-v2.1.0--wave1-blue.svg)](https://github.com/kiliankaena85-byte/cognitive-harness-architect/releases)
-[![Standards Compliance](https://img.shields.io/badge/Standards%20Compliance-100%25%20(49%20Rules)-success.svg)](output_artifacts/release_manifest.json)
-[![Tests Pass Rate](https://img.shields.io/badge/Tests-367%20passed%20(100%25)-brightgreen.svg)](tests/)
-[![Architecture](https://img.shields.io/badge/Architecture-7%20Ministries%20DAG%20%2B%20PBFT-orange.svg)](core/schemas/)
+[![Release](https://img.shields.io/badge/Release-v2.2.0--wave2-blue.svg)](https://github.com/kiliankaena85-byte/cognitive-harness-architect/releases)
+[![Standards Compliance](https://img.shields.io/badge/Standards%20Compliance-100%25%20(56%20Standards)-success.svg)](output_artifacts/release_manifest.json)
+[![Tests Pass Rate](https://img.shields.io/badge/Tests-375%20passed%20(100%25)-brightgreen.svg)](tests/)
+[![Architecture](https://img.shields.io/badge/Architecture-7%20Ministries%20DAG%20%2B%2016%20MCP%20Tools-orange.svg)](core/schemas/)
 
 ---
 
@@ -158,18 +158,18 @@ gantt
     Fault Tree Analysis IEC 61025 (Отдел 6)     :done, w1_6, 2026-10-01, 2026-10-01
     Mutation Testing Engine (Отдел 7)           :done, w1_7, 2026-10-01, 2026-10-01
 
-    section Волна 2: Инженерный инструментарий
-    Service Blueprinting (Отдел 1)              :w2_1, after w1_1, 30d
-    FinOps FOCUS 1.0 экспорт (Отдел 2)           :w2_2, after w1_2, 30d
-    EU AI Act Annex IV Досье (Отдел 3)          :w2_3, after w1_3, 30d
-    SPIFFE/SPIRE воркстейты (Отдел 4)           :w2_4, after w1_4, 30d
-    Structurizr C4-DSL экспорт (Отдел 5)        :w2_5, after w1_5, 30d
-    OpenVINO Direct DMA I/O (Отдел 6)           :w2_6, after w1_6, 30d
-    DeepEval стенд оценки RAG (Отдел 7)         :w2_7, after w1_7, 30d
+    section Волна 2: Инженерный инструментарий (Завершена)
+    Service Blueprinting (Отдел 1)              :done, w2_1, 2026-10-01, 2026-10-01
+    FinOps FOCUS 1.0 экспорт (Отдел 2)           :done, w2_2, 2026-10-01, 2026-10-01
+    EU AI Act Annex IV Досье (Отдел 3)          :done, w2_3, 2026-10-01, 2026-10-01
+    SPIFFE/SPIRE воркстейты (Отдел 4)           :done, w2_4, 2026-10-01, 2026-10-01
+    Structurizr C4-DSL экспорт (Отдел 5)        :done, w2_5, 2026-10-01, 2026-10-01
+    OpenVINO Direct DMA I/O (Отдел 6)           :done, w2_6, 2026-10-01, 2026-10-01
+    DeepEval стенд оценки RAG (Отдел 7)         :done, w2_7, 2026-10-01, 2026-10-01
 
-    section Волна 3: Автономность и ИИ-агенты
-    Opportunity Solution Trees (Отдел 1)        :w3_1, after w2_1, 30d
-    Model Cascade Optimizer (Отдел 2)           :w3_2, after w2_2, 30d
+    section Волна 3: Автономность и ИИ-агенты (В работе)
+    Opportunity Solution Trees (Отдел 1)        :w3_1, 2026-10-02, 30d
+    Model Cascade Optimizer (Отдел 2)           :w3_2, 2026-10-02, 30d
     SPDX 3.0 / OpenChain Guard (Отдел 3)        :w3_3, after w2_3, 30d
     Continuous DAST/Fuzzing Агент (Отдел 4)     :w3_4, after w2_4, 30d
     Self-RAG токены рефлексии (Отдел 5)         :w3_5, after w2_5, 30d
