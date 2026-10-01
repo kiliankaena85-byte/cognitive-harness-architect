@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
 
+from .inception import DiscoveryMode, InceptionActor, InceptionContract, SocraticQuestion
 from .strategy import BusinessRule, EarsRequirement, GherkinScenario, StrategyCJMContract
 from .finance import FinanceBudgetContract, FinancialRiskProfile, MonteCarloSimulationConfig, TokenEconomicsConfig
 from .legal import EuAiActDossier, LegalComplianceContract, PersonalDataProcessing, ThreatModel1119
@@ -34,6 +35,7 @@ T = TypeVar("T", bound=BaseModel)
 
 # Mapping from canonical ministry names / IDs to Pydantic Model classes
 CONTRACT_SCHEMAS_REGISTRY: Dict[str, Type[BaseModel]] = {
+    "MINISTRY_0_INCEPTION": InceptionContract,
     "MINISTRY_1_STRATEGY_CJM": StrategyCJMContract,
     "MINISTRY_2_FINANCE": FinanceBudgetContract,
     "MINISTRY_3_LEGAL_COMPLIANCE": LegalComplianceContract,
@@ -42,6 +44,7 @@ CONTRACT_SCHEMAS_REGISTRY: Dict[str, Type[BaseModel]] = {
     "MINISTRY_6_HARDWARE_RUNTIME": HardwareRuntimeContract,
     "MINISTRY_7_VV_QUALITY_GATE": VVQualityContract,
     # Friendly alias keys
+    "inception": InceptionContract,
     "strategy": StrategyCJMContract,
     "finance": FinanceBudgetContract,
     "legal": LegalComplianceContract,
@@ -54,8 +57,9 @@ CONTRACT_SCHEMAS_REGISTRY: Dict[str, Type[BaseModel]] = {
 # Alias for compatibility with explorer specifications
 MINISTRY_CONTRACT_REGISTRY: Dict[str, Type[BaseModel]] = CONTRACT_SCHEMAS_REGISTRY
 
-# Mapping from 1-based integer ministry index to Model classes
+# Mapping from integer ministry index to Model classes
 MINISTRY_ID_MAP: Dict[int, Type[BaseModel]] = {
+    0: InceptionContract,
     1: StrategyCJMContract,
     2: FinanceBudgetContract,
     3: LegalComplianceContract,
@@ -67,6 +71,7 @@ MINISTRY_ID_MAP: Dict[int, Type[BaseModel]] = {
 
 # Mapping from canonical output artifact filename to Model classes
 MINISTRY_ARTIFACT_REGISTRY: Dict[str, Type[BaseModel]] = {
+    "Enriched_Project_Brief.json": InceptionContract,
     "PRD_Specification.json": StrategyCJMContract,
     "Unit_Economics_Budget.json": FinanceBudgetContract,
     "Compliance_Attestation.json": LegalComplianceContract,
@@ -133,6 +138,11 @@ def compute_contract_hash(instance: BaseModel) -> str:
 
 
 __all__ = [
+    # Level 0 Inception
+    "InceptionContract",
+    "InceptionActor",
+    "SocraticQuestion",
+    "DiscoveryMode",
     # Ministry 1
     "GherkinScenario",
     "BusinessRule",

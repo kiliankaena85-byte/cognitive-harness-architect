@@ -73,6 +73,8 @@ from core.ministries.nodes import (
     create_ministry_node,
 )
 from core.npu_darwinian_loop import NpuParetoSelector, AllHypothesesDisqualifiedError
+from core.discovery_engine import CognitiveDiscoveryEngine
+from core.schemas.inception import DiscoveryMode, InceptionContract
 
 
 # =============================================================================
@@ -760,6 +762,7 @@ class PipelineResult(dict):
         saga_compensations_executed: Optional[List[Dict[str, Any]]] = None,
         simplex_downgrades_applied: Optional[List[Dict[str, Any]]] = None,
         execution_history: Optional[List[Dict[str, Any]]] = None,
+        inception_contract: Optional[Any] = None,
     ):
         super().__init__(artifacts)
         self.artifacts = artifacts
@@ -768,6 +771,7 @@ class PipelineResult(dict):
         self.saga_compensations_executed = saga_compensations_executed or []
         self.simplex_downgrades_applied = simplex_downgrades_applied or []
         self.execution_history = execution_history or []
+        self.inception_contract = inception_contract
 
     def __getitem__(self, key: str) -> Any:
         if key in self:
@@ -828,6 +832,9 @@ class DagOrchestrator:
         self.simplex_downgrades_applied: List[Dict[str, Any]] = []
         self.artifacts: Dict[str, Any] = {}
         self.execution_history: List[Dict[str, Any]] = []
+
+        # Level 0 Inception & Discovery Engine
+        self.discovery_engine = CognitiveDiscoveryEngine()
 
         # Saga compensation safety & handshakes (Phase 2 Cohere / Therac-25 audit)
         self.compensation_timeout_sec: float = 5.0
@@ -1352,13 +1359,36 @@ class DagOrchestrator:
         intent_path: Optional[str] = None,
         simulate_therac_hazard: bool = False,
         output_dir: Optional[Union[str, Path]] = None,
+        discovery_mode: str = "AUTO",
+        user_answers: Optional[Dict[str, str]] = None,
     ) -> PipelineResult:
         """
-        Executes the 7-node autonomous generative cognitive pipeline.
-        Returns PipelineResult containing all 7 validated artifacts.
+        Executes the 7-node autonomous generative cognitive pipeline with Level 0 Inception Gate.
+        Returns PipelineResult containing all 7 validated artifacts + InceptionContract.
         """
         run_start = time.time()
         active_output_dir = Path(output_dir) if output_dir else self.output_dir
+
+        # Level 0 Inception & Discovery Gate
+        active_prompt = prompt
+        inception_contract: Optional[InceptionContract] = None
+
+        mode_str = str(discovery_mode).upper()
+        if mode_str != "BYPASS":
+            vagueness_score, v_details = self.discovery_engine.evaluate_vagueness(prompt)
+            if (mode_str == "AUTO" and v_details["is_vague"]) or mode_str == "INTERACTIVE":
+                d_mode = DiscoveryMode.INTERACTIVE if mode_str == "INTERACTIVE" else DiscoveryMode.AUTO
+                inception_contract = self.discovery_engine.synthesize_inception_contract(
+                    prompt, user_answers=user_answers, mode=d_mode
+                )
+                active_prompt = (
+                    f"{inception_contract.project_name}\n"
+                    f"Домен: {inception_contract.target_domain}\n"
+                    f"Функциональные требования:\n" + "\n".join(f"- {r}" for r in inception_contract.functional_requirements) + "\n"
+                    f"Ограничения аппаратного рантайма: {json.dumps(inception_contract.hardware_envelope, ensure_ascii=False)}\n"
+                    f"Регуляторный профиль: {', '.join(inception_contract.compliance_regime)}\n"
+                    f"Контекст пользователя: {inception_contract.sanitized_prompt}"
+                )
 
         # Reset per-run tracking state
         self.artifacts = {}
@@ -1381,7 +1411,7 @@ class DagOrchestrator:
             for node_id in execution_order:
                 self._execute_node_pipeline(
                     node_id=node_id,
-                    user_prompt=prompt,
+                    user_prompt=active_prompt,
                     simulate_therac_hazard=simulate_therac_hazard,
                 )
 
@@ -1408,6 +1438,10 @@ class DagOrchestrator:
                 if "gost_sections_verified" in q_art:
                     telemetry["gost_sections_verified"] = q_art["gost_sections_verified"]
 
+                if inception_contract:
+                    brief_file = active_output_dir / "Enriched_Project_Brief.json"
+                    brief_file.write_text(inception_contract.model_dump_json(indent=2), encoding="utf-8")
+
                 self.registry.write_all(
                     active_output_dir,
                     pipeline_status="SUCCESS",
@@ -1432,6 +1466,7 @@ class DagOrchestrator:
                 saga_compensations_executed=copy.deepcopy(self.saga_compensations_executed),
                 simplex_downgrades_applied=copy.deepcopy(self.simplex_downgrades_applied),
                 execution_history=copy.deepcopy(self.execution_history),
+                inception_contract=inception_contract,
             )
 
         except Exception as e:

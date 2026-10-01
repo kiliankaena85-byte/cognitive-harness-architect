@@ -508,6 +508,8 @@ def cmd_orchestrate(args):
     print(f"\n[Autonomous Generative Cognitive Pipeline: 7 Ministries]")
     print(f"Mode              : {mode_label}")
     print(f"Task Prompt       : \"{prompt}\"")
+    disc_mode = getattr(args, "discovery_mode", "auto")
+    print(f"Discovery Mode    : {disc_mode.upper()}")
     if intent_path:
         print(f"Intent File       : {intent_path}")
     if output_dir:
@@ -516,6 +518,28 @@ def cmd_orchestrate(args):
         print(f"Simulation        : Therac-25 Hardware Latency Race Condition Triggered")
     print()
 
+    user_answers = {}
+    if disc_mode == "interactive":
+        from core.discovery_engine import CognitiveDiscoveryEngine
+        cde = CognitiveDiscoveryEngine()
+        questions = cde.conduct_socratic_interview(prompt)
+        if questions:
+            print("=" * 70)
+            print("SOCRATIC CUSTDEV QUESTIONS (Level 0 Inception Gate):")
+            print("=" * 70)
+            for q in questions:
+                print(f"\n* [{q.question_id}] {q.prompt_text}")
+                print(f"  -> Рекомендация: {q.default_recommendation}")
+                if sys.stdin.isatty():
+                    try:
+                        ans = input("  Ваш ответ (Enter для рекомендации): ").strip()
+                        user_answers[q.question_id] = ans or q.default_recommendation
+                    except EOFError:
+                        user_answers[q.question_id] = q.default_recommendation
+                else:
+                    user_answers[q.question_id] = q.default_recommendation
+            print("=" * 70 + "\n")
+
     try:
         orchestrator = DagOrchestrator(use_mock=use_mock, output_dir=output_dir)
         result = orchestrator.run(
@@ -523,6 +547,8 @@ def cmd_orchestrate(args):
             intent_path=intent_path,
             simulate_therac_hazard=args.simulate_therac_hazard,
             output_dir=output_dir,
+            discovery_mode=disc_mode,
+            user_answers=user_answers if user_answers else None,
         )
     except Exception as e:
         sys.stderr.write(f"Orchestration Failed: {e}\n")
@@ -556,6 +582,12 @@ def cmd_orchestrate(args):
     quality_art = result.artifacts.get(CANONICAL_FILENAMES.get(7, ""), {})
     release_sig = quality_art.get("cryptographic_release_signature", "UNKNOWN")
     print(f"Cryptographic Signature : {release_sig}")
+
+    if getattr(result, "inception_contract", None):
+        inc = result.inception_contract
+        print(f"Level 0 Inception Gate  : [ENRICHED] (Domain: {inc.target_domain} | Vagueness: {inc.vagueness_score*100:.1f}%)")
+        print(f"  -> Actors Formulated  : {len(inc.actors)} roles ({', '.join(a.role_name for a in inc.actors)})")
+        print(f"  -> Compliance Bound   : {', '.join(inc.compliance_regime)}")
 
     if output_dir:
         out_path = Path(output_dir).resolve()
@@ -627,6 +659,13 @@ def main():
         action="store_true",
         default=False,
         help="Simulate Therac-25 hardware latency hazard",
+    )
+    p_orch.add_argument(
+        "--discovery-mode",
+        type=str,
+        choices=["auto", "interactive", "bypass"],
+        default="auto",
+        help="Level 0 Inception mode: 'auto' (enrich vague prompts), 'interactive' (Socratic questions), 'bypass' (direct)",
     )
 
     # Command: cdd-tdd (Scientific CDD-TDD Gate)

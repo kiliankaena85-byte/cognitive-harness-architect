@@ -1,7 +1,7 @@
 {
   "project_title": "Высоконагруженная SMM-платформа (Enriched Specification)",
   "client_readiness": "NOVICE_GUIDED",
-  "source_raw_prompt": "Хочу простую SMM панель чтобы заработать денег",
+  "source_raw_prompt": "Хочу простую СМ-панель чтобы мониторить сервера и состояние микросервисов",
   "core_actors": [
     {
       "role": "Guest",
@@ -118,6 +118,6 @@
   "telemetry": {
     "device": "Intel(R) AI Boost",
     "npu_active": true,
-    "timestamp": "2026-10-01T00:03:50Z"
+    "timestamp": "2026-10-01T11:50:09Z"
   }
 }

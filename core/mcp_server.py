@@ -22,6 +22,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .cognitive_memory import CognitiveMemoryStore
 from .code_synthesizer import CodeSynthesizer
+from .discovery_engine import CognitiveDiscoveryEngine
+from .schemas.inception import DiscoveryMode
 from .consensus_engine import BftConsensusEngine
 from .canary_deployer import CanaryDeployer
 from .formal_verifier import FormalVerifier
@@ -79,7 +81,7 @@ class McpServer:
     """
 
     SERVER_NAME = "cognitive-harness-architect"
-    SERVER_VERSION = "2.4.0"
+    SERVER_VERSION = "2.5.0"
     PROTOCOL_VERSION = "2024-11-05"
 
     def __init__(
@@ -113,6 +115,7 @@ class McpServer:
         saga_engine: Optional[PersistentSagaEngine] = None,
         watchdog_synth: Optional[WatchdogCircuitSynthesizer] = None,
         ci_formal_audit: Optional[CIFormalAuditStand] = None,
+        discovery_engine: Optional[CognitiveDiscoveryEngine] = None,
     ):
         self.memory: CognitiveMemoryStore = memory_store or CognitiveMemoryStore()
         self.linter: StandardsLinter = linter or StandardsLinter()
@@ -143,12 +146,13 @@ class McpServer:
         self.saga_engine: PersistentSagaEngine = saga_engine or PersistentSagaEngine()
         self.watchdog_synth: WatchdogCircuitSynthesizer = watchdog_synth or WatchdogCircuitSynthesizer()
         self.ci_formal_audit: CIFormalAuditStand = ci_formal_audit or CIFormalAuditStand()
+        self.discovery_engine: CognitiveDiscoveryEngine = discovery_engine or CognitiveDiscoveryEngine()
 
         self._tools: Dict[str, Tuple[McpToolDefinition, Callable[[Dict[str, Any]], Dict[str, Any]]]] = {}
         self._register_default_tools()
 
     def _register_default_tools(self) -> None:
-        """Registers the 30 core architectural, engineering, state certification, and autonomous agent tools."""
+        """Registers the 31 core architectural, engineering, state certification, and autonomous agent tools."""
 
         # 1. lint_specification
         self.register_tool(
@@ -697,6 +701,24 @@ class McpServer:
             self._handle_run_ci_formal_audit,
         )
 
+        # 31. inspect_and_enrich_intent
+        self.register_tool(
+            McpToolDefinition(
+                name="inspect_and_enrich_intent",
+                description="Level 0 Cognitive Discovery & Inception Engine. Analyzes raw user prompts for vagueness/ambiguity (ISO 29148), classifies domain archetypes (System Infrastructure, FinTech, E-Commerce, etc.), and enriches them into structured InceptionContracts and Socratic questions.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "prompt": {"type": "string", "description": "Raw, naive, or conversational user project idea / requirement prompt"},
+                        "discovery_mode": {"type": "string", "enum": ["AUTO", "INTERACTIVE", "BYPASS"], "default": "AUTO", "description": "Inception activation mode"},
+                        "user_answers": {"type": "object", "description": "Optional mapping of Socratic question IDs to user answers"},
+                    },
+                    "required": ["prompt"],
+                },
+            ),
+            self._handle_inspect_and_enrich_intent,
+        )
+
     def register_tool(
         self,
         definition: McpToolDefinition,
@@ -1096,6 +1118,25 @@ class McpServer:
         })
         rep = self.ci_formal_audit.run_full_formal_audit(system_name=sname, commit_sha=csha, telemetry=telem)
         return {"audit_report": rep.model_dump()}
+
+    def _handle_inspect_and_enrich_intent(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        prompt = args.get("prompt", "")
+        mode_str = str(args.get("discovery_mode", "AUTO")).upper()
+        try:
+            mode = DiscoveryMode(mode_str)
+        except Exception:
+            mode = DiscoveryMode.AUTO
+        answers = args.get("user_answers", {})
+        contract = self.discovery_engine.synthesize_inception_contract(raw_prompt=prompt, user_answers=answers, mode=mode)
+        socratic_questions = [q.model_dump() for q in self.discovery_engine.conduct_socratic_interview(prompt)]
+        strategy_input = self.discovery_engine.to_strategy_cjm_input(contract)
+        return {
+            "inception_contract": contract.model_dump(),
+            "vagueness_score": contract.vagueness_score,
+            "target_domain": contract.target_domain,
+            "socratic_questions": socratic_questions,
+            "strategy_cjm_input": strategy_input,
+        }
 
     # =========================================================================
     # JSON-RPC 2.0 Protocol Dispatcher

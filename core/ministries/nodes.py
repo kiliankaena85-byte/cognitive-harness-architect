@@ -812,8 +812,8 @@ class DeterministicMockGenerator:
             str(markov_blanket.get("prompt", "")),
         ]).lower()
         hazard_keywords = [
-            "interlock", "actuator", "therac", "race condition", "race hazard",
-            "гонк", "состояние гонки", "блокировк", "аппаратн"
+            "therac", "therac-25", "race condition", "race hazard",
+            "гонк", "состояние гонки", "гонка состояний"
         ]
         return any(term in full_text for term in hazard_keywords)
 
