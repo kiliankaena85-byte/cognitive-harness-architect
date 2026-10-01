@@ -918,7 +918,24 @@ class DeterministicMockGenerator:
             "jobs_to_be_done": ["Decompose product requirements", "Guarantee mathematical solvency and security"],
             "acceptance_criteria": acs,
             "business_rules": brs,
+            "ears_requirements": [
+                {
+                    "req_id": "REQ-EARS-01",
+                    "pattern_type": "EVENT_DRIVEN",
+                    "text": "When valid specification input is supplied, the system shall execute cognitive decomposition.",
+                    "source_persona": "Enterprise Architect",
+                    "source_ac_id": acs[0]["id"],
+                },
+                {
+                    "req_id": "REQ-EARS-02",
+                    "pattern_type": "UBIQUITOUS",
+                    "text": "The system shall continuously enforce zero-trust schema validation across all stage gates.",
+                    "source_persona": "Safety Auditor",
+                    "source_ac_id": acs[0]["id"],
+                },
+            ],
             "iso_29148_syntax_validated": True,
+            "iso_29148_quality_attributes_verified": True,
             "gherkin_dialect": "en",
             "babok_baccm_aligned": True,
             "target_document_profile": "GOST_34_AUTOMATED_SYSTEM",
@@ -960,6 +977,18 @@ class DeterministicMockGenerator:
                 "target_cost_per_thousand_inferences_rub": 150.0,
                 "context_cache_hit_rate_target_pct": 85.0,
             },
+            "monte_carlo_config": {
+                "iterations": 10000,
+                "confidence_level": 0.95,
+                "seed": 42,
+                "variance_pct": 15.0,
+            },
+            "risk_profile": {
+                "value_at_risk_95_pct": round(opex * 0.12, 2),
+                "cash_flow_at_risk": round(capex * 0.08, 2),
+                "insolvency_probability_pct": 0.5 if "defensive" in pname else 1.2,
+                "monte_carlo_verified": True,
+            },
         }
 
     def _mock_legal(self, profile: CandidateProfile, pname: str) -> Dict[str, Any]:
@@ -996,6 +1025,18 @@ class DeterministicMockGenerator:
             "fstec_gis_class": "К2",
             "fstec_ispdn_level": fz_level if fz_level != "NONE" else "NONE",
             "fstec_kii_category": "КАТЕГОРИЯ_2",
+            "pp_1119_threat_model": {
+                "threat_type": "ТИП_3",
+                "skzi_class": "КС2",
+                "biometric_data_used": False,
+                "employee_data_only": False,
+            },
+            "eu_ai_act_dossier": {
+                "article_14_human_oversight": True,
+                "article_15_robustness_accuracy": True,
+                "technical_documentation_annex_iv": True,
+                "high_risk_conformity_assessment": "INTERNAL_CONTROL",
+            },
             "gost_7_0_97_doc_attributes_present": True,
         }
 
@@ -1041,12 +1082,27 @@ class DeterministicMockGenerator:
             "zero_trust_enforced": True,
             "auth_mechanisms": auth,
             "stride_matrix": stride_matrix,
+            "mitre_atlas_matrix": [
+                {
+                    "tactic": "INITIAL_ACCESS",
+                    "technique_id": "AML.T0043",
+                    "technique_name": "Craft Adversarial Data",
+                    "mitigation": "Enforce strict XML quarantine isolation and Pydantic V2 schema sanitization",
+                },
+                {
+                    "tactic": "EXECUTION",
+                    "technique_id": "AML.T0054",
+                    "technique_name": "LLM Prompt Injection",
+                    "mitigation": "Multi-tier prompt quarantine tags and token-level sanitization filter",
+                },
+            ],
             "rate_limiting_rps_per_ip": rps,
             "data_encryption_at_rest": enc,
             "data_encryption_in_transit": "TLS_1_3",
             "fstec_gost_56939_certified": True,
             "owasp_asvs_level": "L3" if "defensive" in pname else "L2",
             "nist_800_207_zero_trust": True,
+            "iso_42001_security_controls_active": True,
             "ai_security": {
                 "covered_llm_vulnerabilities": [
                     "LLM01_PROMPT_INJECTION",
@@ -1095,6 +1151,15 @@ class DeterministicMockGenerator:
             "openapi_version": "3.1.0",
             "endpoints": endpoints,
             "async_message_bus": bus,
+            "asyncapi_version": "3.0.0",
+            "async_topics": [
+                {
+                    "topic_name": "cognitive.hypotheses.committed",
+                    "event_type": "com.cognitive.artifact.committed",
+                    "schema_format": "JSON_SCHEMA",
+                    "retention_hours": 48,
+                }
+            ],
             "database_normalization": norm,
             "cyclic_dependencies_detected": False,
             "error_response_standard": "RFC_7807",
@@ -1109,6 +1174,13 @@ class DeterministicMockGenerator:
                 "chunk_overlap_tokens": 64,
                 "hybrid_search_enabled": True,
                 "reranker_model": "bge-reranker-large",
+            },
+            "self_rag": {
+                "retrieve_reflection_token": True,
+                "is_rel_reflection_token": True,
+                "is_sup_reflection_token": True,
+                "is_use_reflection_token": True,
+                "critique_threshold": 0.88,
             },
             "memory_architecture": {
                 "short_term_context_window_tokens": 32768,
@@ -1185,6 +1257,30 @@ class DeterministicMockGenerator:
                 }
             ],
             "max_fmea_rpn": 120,
+            "fault_tree_analysis": [
+                {
+                    "node_id": "FTN-GATE-01",
+                    "gate_type": "OR",
+                    "description": "Top event: Uncontrolled actuator movement without interlock",
+                    "probability_per_hour": 1e-6,
+                    "children_node_ids": ["FTN-EVENT-02", "FTN-EVENT-03"],
+                },
+                {
+                    "node_id": "FTN-EVENT-02",
+                    "gate_type": "BASIC_EVENT",
+                    "description": "Sensor failure in position feedback loop",
+                    "probability_per_hour": 5e-7,
+                    "children_node_ids": [],
+                },
+                {
+                    "node_id": "FTN-EVENT-03",
+                    "gate_type": "BASIC_EVENT",
+                    "description": "Watchdog timeout expiration on compute unit",
+                    "probability_per_hour": 5e-7,
+                    "children_node_ids": [],
+                },
+            ],
+            "iec_61025_fta_verified": True,
         }
 
     def _mock_quality(self, profile: CandidateProfile, pname: str) -> Dict[str, Any]:
@@ -1209,6 +1305,13 @@ class DeterministicMockGenerator:
             "iso_29148_unambiguity_score": iso,
             "rtm_traceability_coverage_pct": rtm,
             "mutation_score_pct": mutation,
+            "mutation_testing": {
+                "framework": "MUTMUT",
+                "mutation_score_indicator_target_pct": 88.5 if "defensive" in pname else 85.5,
+                "survived_mutants_threshold": 0,
+                "killed_mutants_count": 120,
+                "total_mutants_generated": 125,
+            },
             "brier_score_calibration": brier,
             "hoare_logic_invariants_verified": hoare,
             "iso_29119_test_techniques": ["BOUNDARY_VALUE_ANALYSIS", "EQUIVALENCE_PARTITIONING", "MUTATION_TESTING"],

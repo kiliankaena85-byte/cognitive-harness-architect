@@ -64,6 +64,27 @@ class ArchitectureDecisionRecord(BaseModel):
     compliance_verification: str = Field(default="Automated zero-trust stage gate linter", description="Механизм верификации соблюдения")
 
 
+class AsyncMessageTopic(BaseModel):
+    """AsyncAPI 3.0 Message Topic Specification with CloudEvents 1.0 support."""
+    model_config = ConfigDict(extra="forbid")
+
+    topic_name: str = Field(min_length=1, pattern=r"^[a-zA-Z0-9_\-\.]+$", description="Имя топика сообщений брокера")
+    event_type: str = Field(min_length=1, description="Тип события по CloudEvents 1.0, например com.cognitive.artifact.committed")
+    schema_format: Literal["AVRO", "JSON_SCHEMA", "PROTOBUF"] = Field(default="JSON_SCHEMA", description="Формат схемы полезной нагрузки")
+    retention_hours: int = Field(default=24, gt=0, description="Период удержания сообщений в топике в часах")
+
+
+class SelfRagConfig(BaseModel):
+    """Self-RAG (Self-Reflective Retrieval-Augmented Generation) Architecture Configuration."""
+    model_config = ConfigDict(extra="forbid")
+
+    retrieve_reflection_token: bool = Field(default=True, description="Флаг активации токена рефлексии потребности извлечения [Retrieve]")
+    is_rel_reflection_token: bool = Field(default=True, description="Флаг активации токена оценки релевантности фрагмента [IsRel]")
+    is_sup_reflection_token: bool = Field(default=True, description="Флаг активации токена обоснованности ответа источником [IsSup]")
+    is_use_reflection_token: bool = Field(default=True, description="Флаг активации токена полезности и полноты ответа [IsUse]")
+    critique_threshold: float = Field(default=0.85, ge=0.5, le=1.0, description="Порог самокритики для фиксации ответа >= 0.85")
+
+
 class SystemAnalysisContract(BaseModel):
     """Contract for Ministry 5 (System Analysis & Architecture)."""
     model_config = ConfigDict(extra="forbid")
@@ -75,6 +96,10 @@ class SystemAnalysisContract(BaseModel):
     endpoints: List[ApiEndpoint] = Field(min_length=1, description="Спецификация API-эндпоинтов")
     async_message_bus: Optional[Literal["KAFKA", "RABBITMQ", "REDIS_STREAMS", "NATS"]] = Field(
         default=None, description="Брокер асинхронных сообщений"
+    )
+    asyncapi_version: str = Field(default="3.0.0", description="Версия спецификации AsyncAPI 3.0.0")
+    async_topics: List[AsyncMessageTopic] = Field(
+        default_factory=list, description="Реестр топиков асинхронных сообщений AsyncAPI 3.0"
     )
     database_normalization: Literal["3NF", "BCNF", "DENORMALIZED_READ_REPLICAS"] = Field(
         default="3NF", description="Степень нормализации базы данных"
@@ -94,6 +119,9 @@ class SystemAnalysisContract(BaseModel):
     rag_pipeline: RagPipelineConfig = Field(
         default_factory=RagPipelineConfig, description="Спецификация RAG-пайплайна и векторной памяти"
     )
+    self_rag: SelfRagConfig = Field(
+        default_factory=SelfRagConfig, description="Конфигурация Self-RAG адаптивного извлечения и самокритики"
+    )
     memory_architecture: MemoryArchitectureConfig = Field(
         default_factory=MemoryArchitectureConfig, description="4-уровневая архитектура когнитивной памяти"
     )
@@ -112,7 +140,9 @@ class SystemAnalysisContract(BaseModel):
 
 __all__ = [
     "ApiEndpoint",
+    "AsyncMessageTopic",
     "RagPipelineConfig",
+    "SelfRagConfig",
     "MemoryArchitectureConfig",
     "ArchitectureDecisionRecord",
     "SystemAnalysisContract",

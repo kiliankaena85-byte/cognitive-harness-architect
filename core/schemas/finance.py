@@ -23,6 +23,26 @@ class TokenEconomicsConfig(BaseModel):
     )
 
 
+class MonteCarloSimulationConfig(BaseModel):
+    """Monte Carlo Risk Simulation Configuration for FinOps & Solvency."""
+    model_config = ConfigDict(extra="forbid")
+
+    iterations: int = Field(default=10000, ge=1000, le=100000, description="Число стохастических итераций Монте-Карло >= 1000")
+    confidence_level: float = Field(default=0.95, ge=0.90, le=0.999, description="Доверительный уровень (0.95 = 95%)")
+    seed: int = Field(default=42, description="Фиксированный seed для детерминированной воспроизводимости")
+    variance_pct: float = Field(default=15.0, ge=0.0, le=100.0, description="Параметр волатильности / вариативности (15%)")
+
+
+class FinancialRiskProfile(BaseModel):
+    """Value-at-Risk (VaR) and Financial Solvency Risk Metrics."""
+    model_config = ConfigDict(extra="forbid")
+
+    value_at_risk_95_pct: float = Field(default=0.0, ge=0.0, description="Показатель Value-at-Risk (VaR 95%)")
+    cash_flow_at_risk: float = Field(default=0.0, ge=0.0, description="Показатель Cash Flow at Risk (CFaR)")
+    insolvency_probability_pct: float = Field(default=0.0, ge=0.0, le=5.0, description="Вероятность неплатежеспособности <= 5.0%")
+    monte_carlo_verified: bool = Field(default=True, description="Флаг успешной стохастической верификации")
+
+
 class FinanceBudgetContract(BaseModel):
     """Contract for Ministry 2 (Finance & Unit Economics)."""
     model_config = ConfigDict(extra="forbid")
@@ -38,6 +58,12 @@ class FinanceBudgetContract(BaseModel):
     iso_31000_risk_assessed: bool = Field(default=True, description="Оценка финансовых рисков по стандарту ISO 31000:2018")
     token_economics: TokenEconomicsConfig = Field(
         default_factory=TokenEconomicsConfig, description="Экономика токенов и FinOps для LLM/нейросетей"
+    )
+    monte_carlo_config: MonteCarloSimulationConfig = Field(
+        default_factory=MonteCarloSimulationConfig, description="Конфигурация стохастической симуляции Монте-Карло"
+    )
+    risk_profile: FinancialRiskProfile = Field(
+        default_factory=FinancialRiskProfile, description="Профиль финансовых рисков и метрика VaR 95%"
     )
 
     @field_validator("lifetime_value")
@@ -65,4 +91,9 @@ class FinanceBudgetContract(BaseModel):
         return self
 
 
-__all__ = ["TokenEconomicsConfig", "FinanceBudgetContract"]
+__all__ = [
+    "TokenEconomicsConfig",
+    "MonteCarloSimulationConfig",
+    "FinancialRiskProfile",
+    "FinanceBudgetContract",
+]

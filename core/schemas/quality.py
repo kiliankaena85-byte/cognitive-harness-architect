@@ -18,6 +18,17 @@ class RagTriadMetricsConfig(BaseModel):
     adversarial_jailbreak_resistance_pct: float = Field(ge=98.0, le=100.0, default=99.5, description="Устойчивость к состязательным атакам и взлому промпта >= 98.0%")
 
 
+class MutationTestingConfig(BaseModel):
+    """Mutation Testing Configuration and Mutation Score Indicator (MSI) (ISO 29119-4)."""
+    model_config = ConfigDict(extra="forbid")
+
+    framework: Literal["COSMIC_RAY", "MUTMUT", "AST_MUTATOR"] = Field(default="MUTMUT", description="Фреймворк мутационного анализа")
+    mutation_score_indicator_target_pct: float = Field(default=85.0, ge=80.0, le=100.0, description="Целевой показатель MSI >= 85.0%")
+    survived_mutants_threshold: int = Field(default=0, ge=0, description="Предельное число выживших мутантов")
+    killed_mutants_count: int = Field(default=100, ge=0, description="Число нейтрализованных (убитых) мутантов")
+    total_mutants_generated: int = Field(default=105, ge=1, description="Общее число сгенерированных мутантов")
+
+
 class VVQualityContract(BaseModel):
     """Contract for Ministry 7 (V&V Quality Gate & Certification)."""
     model_config = ConfigDict(extra="forbid")
@@ -36,6 +47,9 @@ class VVQualityContract(BaseModel):
     )
     mutation_score_pct: float = Field(
         ge=95.0, description="Мутационный скор тестов >= 95%"
+    )
+    mutation_testing: MutationTestingConfig = Field(
+        default_factory=MutationTestingConfig, description="Конфигурация мутационного анализа и метрика MSI"
     )
     cognitive_rag_triad: RagTriadMetricsConfig = Field(
         default_factory=RagTriadMetricsConfig, description="Метрики качества когнитивной генерации RAG Triad"
@@ -71,4 +85,4 @@ class VVQualityContract(BaseModel):
         return v
 
 
-__all__ = ["RagTriadMetricsConfig", "VVQualityContract"]
+__all__ = ["RagTriadMetricsConfig", "MutationTestingConfig", "VVQualityContract"]

@@ -1,9 +1,9 @@
 # Strategic Roadmap & Departmental Deep Evolution (2026–2027)
 ## Project: Cognitive Harness Architect (Universal Cognitive Decomposition Engine — UCDE v2.0.0+)
 
-[![Release](https://img.shields.io/badge/Release-v2.0.0-blue.svg)](https://github.com/kiliankaena85-byte/cognitive-harness-architect/releases/tag/v2.0.0)
-[![Standards Compliance](https://img.shields.io/badge/Standards%20Compliance-100%25%20(38%20Rules)-success.svg)](output_artifacts/release_manifest.json)
-[![Tests Pass Rate](https://img.shields.io/badge/Tests-350%20passed%20(100%25)-brightgreen.svg)](tests/)
+[![Release](https://img.shields.io/badge/Release-v2.1.0--wave1-blue.svg)](https://github.com/kiliankaena85-byte/cognitive-harness-architect/releases)
+[![Standards Compliance](https://img.shields.io/badge/Standards%20Compliance-100%25%20(49%20Rules)-success.svg)](output_artifacts/release_manifest.json)
+[![Tests Pass Rate](https://img.shields.io/badge/Tests-367%20passed%20(100%25)-brightgreen.svg)](tests/)
 [![Architecture](https://img.shields.io/badge/Architecture-7%20Ministries%20DAG%20%2B%20PBFT-orange.svg)](core/schemas/)
 
 ---
@@ -149,14 +149,14 @@ flowchart TD
 gantt
     title Комплексный план развития отделов UCDE (2026-2027)
     dateFormat  YYYY-MM-DD
-    section Волна 1: Углубление стандартов
-    BABOK & EARS грамматика (Отдел 1)           :active, w1_1, 2026-10-01, 30d
-    Monte Carlo VaR симуляции (Отдел 2)          :active, w1_2, 2026-10-01, 30d
-    152-ФЗ / ПП 1119 СКЗИ модели (Отдел 3)      :active, w1_3, 2026-10-01, 30d
-    MITRE ATLAS матрицы угроз (Отдел 4)          :active, w1_4, 2026-10-01, 30d
-    AsyncAPI 3.0 & CloudEvents (Отдел 5)        :active, w1_5, 2026-10-01, 30d
-    Fault Tree Analysis IEC 61025 (Отдел 6)     :active, w1_6, 2026-10-01, 30d
-    Mutation Testing Engine (Отдел 7)           :active, w1_7, 2026-10-01, 30d
+    section Волна 1: Углубление стандартов (Завершена)
+    BABOK & EARS грамматика (Отдел 1)           :done, w1_1, 2026-10-01, 2026-10-01
+    Monte Carlo VaR симуляции (Отдел 2)          :done, w1_2, 2026-10-01, 2026-10-01
+    152-ФЗ / ПП 1119 СКЗИ модели (Отдел 3)      :done, w1_3, 2026-10-01, 2026-10-01
+    MITRE ATLAS матрицы угроз (Отдел 4)          :done, w1_4, 2026-10-01, 2026-10-01
+    AsyncAPI 3.0 & CloudEvents (Отдел 5)        :done, w1_5, 2026-10-01, 2026-10-01
+    Fault Tree Analysis IEC 61025 (Отдел 6)     :done, w1_6, 2026-10-01, 2026-10-01
+    Mutation Testing Engine (Отдел 7)           :done, w1_7, 2026-10-01, 2026-10-01
 
     section Волна 2: Инженерный инструментарий
     Service Blueprinting (Отдел 1)              :w2_1, after w1_1, 30d

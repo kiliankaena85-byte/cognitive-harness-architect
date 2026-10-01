@@ -78,6 +78,37 @@ class OwaspLlmSecurityConfig(BaseModel):
     )
 
 
+
+MITRE_ATLAS_TACTICS = Literal[
+    "RECONNAISSANCE",
+    "RESOURCE_DEVELOPMENT",
+    "INITIAL_ACCESS",
+    "ML_MODEL_ACCESS",
+    "EXECUTION",
+    "PERSISTENCE",
+    "DEFENSE_EVASION",
+    "CREDENTIAL_ACCESS",
+    "DISCOVERY",
+    "COLLECTION",
+    "ML_ATTACK_STAGING",
+    "EXFILTRATION",
+    "IMPACT",
+]
+
+
+class MitreAtlasThreat(BaseModel):
+    """Threat Model Component conforming to MITRE ATLAS (Adversarial Threat Landscape for AI Systems)."""
+    model_config = ConfigDict(extra="forbid")
+
+    tactic: MITRE_ATLAS_TACTICS = Field(description="Тактика матрицы MITRE ATLAS")
+    technique_id: str = Field(
+        pattern=r"^AML\.T\d{4}(\.\d{3})?$",
+        description="Идентификатор техники MITRE ATLAS (например AML.T0043, AML.T0054)"
+    )
+    technique_name: str = Field(min_length=3, description="Название техники атаки на ИИ")
+    mitigation: str = Field(min_length=10, description="Конкретная мера противодействия / нейтрализации")
+
+
 class SecurityPolicyContract(BaseModel):
     """Contract for Ministry 4 (Information Security)."""
     model_config = ConfigDict(extra="forbid")
@@ -88,6 +119,9 @@ class SecurityPolicyContract(BaseModel):
     )
     stride_matrix: List[StrideThreat] = Field(
         min_length=6, description="Минимум по 1 угрозе на каждую из 6 категорий STRIDE"
+    )
+    mitre_atlas_matrix: List[MitreAtlasThreat] = Field(
+        default_factory=list, description="Матрица угроз безопасности систем искусственного интеллекта по MITRE ATLAS"
     )
     rate_limiting_rps_per_ip: int = Field(gt=0, le=1000, description="Ограничение частоты запросов RPS на IP")
     data_encryption_at_rest: Literal["AES_256_GCM", "GOST_KUZNYECHIK"] = Field(
@@ -104,6 +138,9 @@ class SecurityPolicyContract(BaseModel):
     )
     nist_800_207_zero_trust: bool = Field(
         default=True, description="Соответствие архитектуре NIST SP 800-207 Zero Trust"
+    )
+    iso_42001_security_controls_active: bool = Field(
+        default=True, description="Активация контролей безопасности ИИ по стандарту ISO/IEC 42001:2023"
     )
     ai_security: OwaspLlmSecurityConfig = Field(
         default_factory=OwaspLlmSecurityConfig, description="Конфигурация безопасности ИИ и защиты от инъекций"
@@ -128,4 +165,11 @@ class SecurityPolicyContract(BaseModel):
         return v
 
 
-__all__ = ["StrideThreat", "OwaspLlmSecurityConfig", "SecurityPolicyContract", "REQUIRED_STRIDE_CATEGORIES", "DEFAULT_STRIDE_TO_UBI"]
+__all__ = [
+    "StrideThreat",
+    "MitreAtlasThreat",
+    "OwaspLlmSecurityConfig",
+    "SecurityPolicyContract",
+    "REQUIRED_STRIDE_CATEGORIES",
+    "DEFAULT_STRIDE_TO_UBI",
+]

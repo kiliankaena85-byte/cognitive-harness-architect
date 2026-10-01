@@ -30,6 +30,17 @@ class FmeaFailureMode(BaseModel):
             self.rpn = calculated
 
 
+class FaultTreeNode(BaseModel):
+    """Fault Tree Analysis (FTA) Node conforming to IEC 61025 / ГОСТ Р 27.302."""
+    model_config = ConfigDict(extra="forbid")
+
+    node_id: str = Field(pattern=r"^FTN-[A-Z0-9]+-\d+$", description="Уникальный идентификатор узла FTA (например FTN-GATE-01)")
+    gate_type: Literal["AND", "OR", "BASIC_EVENT", "VOTE"] = Field(description="Тип логического вентиля FTA")
+    description: str = Field(min_length=5, description="Описание логического вентиля или базисного события")
+    probability_per_hour: float = Field(default=1e-6, ge=0.0, le=1.0, description="Интенсивность отказов в час (lambda)")
+    children_node_ids: List[str] = Field(default_factory=list, description="Идентификаторы дочерних узлов в дереве отказов")
+
+
 class HardwareRuntimeContract(BaseModel):
     """Contract for Ministry 6 (Hardware Runtime & Edge NPU)."""
     model_config = ConfigDict(extra="forbid")
@@ -66,6 +77,12 @@ class HardwareRuntimeContract(BaseModel):
     max_fmea_rpn: int = Field(
         default=120, le=120, description="Предельно допустимый порог риска RPN <= 120 (IEC 61508 SIL-2)"
     )
+    fault_tree_analysis: List[FaultTreeNode] = Field(
+        default_factory=list, description="Дерево отказов FTA по стандарту IEC 61025 / ГОСТ Р 27.302"
+    )
+    iec_61025_fta_verified: bool = Field(
+        default=True, description="Подтверждение анализа дерева отказов по IEC 61025"
+    )
 
     @model_validator(mode="after")
     def verify_physical_temporal_invariants(self) -> Self:
@@ -86,4 +103,4 @@ class HardwareRuntimeContract(BaseModel):
         return self
 
 
-__all__ = ["FmeaFailureMode", "HardwareRuntimeContract"]
+__all__ = ["FmeaFailureMode", "FaultTreeNode", "HardwareRuntimeContract"]

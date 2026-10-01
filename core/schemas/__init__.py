@@ -8,13 +8,27 @@ from typing import Any, Dict, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
 
-from .strategy import BusinessRule, GherkinScenario, StrategyCJMContract
-from .finance import FinanceBudgetContract, TokenEconomicsConfig
-from .legal import LegalComplianceContract, PersonalDataProcessing
-from .security import REQUIRED_STRIDE_CATEGORIES, SecurityPolicyContract, StrideThreat, OwaspLlmSecurityConfig
-from .analysis import ApiEndpoint, RagPipelineConfig, MemoryArchitectureConfig, ArchitectureDecisionRecord, SystemAnalysisContract
-from .hardware import HardwareRuntimeContract, FmeaFailureMode
-from .quality import VVQualityContract, RagTriadMetricsConfig
+from .strategy import BusinessRule, EarsRequirement, GherkinScenario, StrategyCJMContract
+from .finance import FinanceBudgetContract, FinancialRiskProfile, MonteCarloSimulationConfig, TokenEconomicsConfig
+from .legal import EuAiActDossier, LegalComplianceContract, PersonalDataProcessing, ThreatModel1119
+from .security import (
+    REQUIRED_STRIDE_CATEGORIES,
+    MitreAtlasThreat,
+    OwaspLlmSecurityConfig,
+    SecurityPolicyContract,
+    StrideThreat,
+)
+from .analysis import (
+    ApiEndpoint,
+    ArchitectureDecisionRecord,
+    AsyncMessageTopic,
+    MemoryArchitectureConfig,
+    RagPipelineConfig,
+    SelfRagConfig,
+    SystemAnalysisContract,
+)
+from .hardware import FaultTreeNode, FmeaFailureMode, HardwareRuntimeContract
+from .quality import MutationTestingConfig, RagTriadMetricsConfig, VVQualityContract
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -122,30 +136,40 @@ __all__ = [
     # Ministry 1
     "GherkinScenario",
     "BusinessRule",
+    "EarsRequirement",
     "StrategyCJMContract",
     # Ministry 2
     "FinanceBudgetContract",
     "TokenEconomicsConfig",
+    "MonteCarloSimulationConfig",
+    "FinancialRiskProfile",
     # Ministry 3
     "PersonalDataProcessing",
+    "ThreatModel1119",
+    "EuAiActDossier",
     "LegalComplianceContract",
     # Ministry 4
     "StrideThreat",
+    "MitreAtlasThreat",
     "SecurityPolicyContract",
     "OwaspLlmSecurityConfig",
     "REQUIRED_STRIDE_CATEGORIES",
     # Ministry 5
     "ApiEndpoint",
+    "AsyncMessageTopic",
     "RagPipelineConfig",
+    "SelfRagConfig",
     "MemoryArchitectureConfig",
     "ArchitectureDecisionRecord",
     "SystemAnalysisContract",
     # Ministry 6
     "HardwareRuntimeContract",
     "FmeaFailureMode",
+    "FaultTreeNode",
     # Ministry 7
     "VVQualityContract",
     "RagTriadMetricsConfig",
+    "MutationTestingConfig",
     # Registries & Helpers
     "CONTRACT_SCHEMAS_REGISTRY",
     "MINISTRY_CONTRACT_REGISTRY",

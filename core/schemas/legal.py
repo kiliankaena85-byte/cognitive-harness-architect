@@ -38,6 +38,34 @@ class PersonalDataProcessing(BaseModel):
     gdpr_dpa_required: bool = Field(default=False, description="Необходимость соглашения DPA по GDPR")
 
 
+class ThreatModel1119(BaseModel):
+    """Модель угроз по Постановлению Правительства РФ № 1119 и требования СКЗИ ФСБ."""
+    model_config = ConfigDict(extra="forbid")
+
+    threat_type: Literal["ТИП_1", "ТИП_2", "ТИП_3"] = Field(
+        default="ТИП_3",
+        description="Тип актуальных угроз по ПП № 1119 (1-НДВ в системном ПО, 2-НДВ в прикладном ПО, 3-не связанные с НДВ)"
+    )
+    skzi_class: Literal["КС1", "КС2", "КС3", "КБ", "КА", "NONE"] = Field(
+        default="КС2",
+        description="Класс средств криптографической защиты информации (СКЗИ) по требованиям ФСБ России"
+    )
+    biometric_data_used: bool = Field(default=False, description="Обработка биометрических персональных данных")
+    employee_data_only: bool = Field(default=False, description="Обработка ПДн исключительно сотрудников оператора")
+
+
+class EuAiActDossier(BaseModel):
+    """EU AI Act Technical Documentation & Risk Assessment Dossier (Articles 14, 15, Annex IV)."""
+    model_config = ConfigDict(extra="forbid")
+
+    article_14_human_oversight: bool = Field(default=True, description="Статья 14: Человеческий контроль и надзор (Human-in-the-loop)")
+    article_15_robustness_accuracy: bool = Field(default=True, description="Статья 15: Точность, устойчивость и кибербезопасность")
+    technical_documentation_annex_iv: bool = Field(default=True, description="Техническая документация согласно Приложению IV EU AI Act")
+    high_risk_conformity_assessment: Literal["INTERNAL_CONTROL", "THIRD_PARTY_AUDIT", "NOT_APPLICABLE"] = Field(
+        default="INTERNAL_CONTROL", description="Процедура оценки соответствия высокорисковых систем ИИ"
+    )
+
+
 class LegalComplianceContract(BaseModel):
     """Contract for Ministry 3 (Legal & Regulatory Compliance)."""
     model_config = ConfigDict(extra="forbid")
@@ -63,6 +91,12 @@ class LegalComplianceContract(BaseModel):
     fstec_kii_category: Literal["КАТЕГОРИЯ_1", "КАТЕГОРИЯ_2", "КАТЕГОРИЯ_3", "НЕ_КАТЕГОРИРУЕТСЯ"] = Field(
         default="КАТЕГОРИЯ_2", description="Категория значимости объекта КИИ по Приказу ФСТЭК России № 239"
     )
+    pp_1119_threat_model: ThreatModel1119 = Field(
+        default_factory=ThreatModel1119, description="Модель угроз безопасности ИСПДн по ПП № 1119 и класс СКЗИ"
+    )
+    eu_ai_act_dossier: EuAiActDossier = Field(
+        default_factory=EuAiActDossier, description="Техническое досье соответствия EU AI Act (Статьи 14, 15)"
+    )
     gost_7_0_97_doc_attributes_present: bool = Field(
         default=True, description="Наличие обязательных реквизитов документа по ГОСТ Р 7.0.97-2016"
     )
@@ -78,4 +112,9 @@ class LegalComplianceContract(BaseModel):
         return v
 
 
-__all__ = ["PersonalDataProcessing", "LegalComplianceContract"]
+__all__ = [
+    "PersonalDataProcessing",
+    "ThreatModel1119",
+    "EuAiActDossier",
+    "LegalComplianceContract",
+]

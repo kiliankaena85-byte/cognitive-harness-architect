@@ -78,12 +78,15 @@ class StandardsLinter:
                 ("ISO_29148", "Rule 1.2: Traceability of Business Rules to Acceptance Criteria"),
                 ("BABOK_BACCM", "Rule 1.3: Alignment with Business Analysis Core Concept Model"),
                 ("GOST_19_ESPD", "Rule 1.4: Pure software specification sections according to GOST 19.201-78 / GOST 7.0.97"),
+                ("ISO_29148_EARS", "Rule 1.5: EARS syntax requirements with shall/when keywords and valid pattern types"),
+                ("ISO_29148_ATTRIBUTES", "Rule 1.6: Verification of 9 requirements quality attributes according to ISO 29148"),
             ],
             2: [
                 ("FINOPS_FOCUS_1.0", "Rule 2.1: Open Cost and Usage standard specification"),
                 ("IAS_38", "Rule 2.2: CaPEx / OpEx financial solvency and bounds"),
                 ("ISO_31000", "Rule 2.3: Quantitative enterprise financial risk assessment"),
                 ("TOKEN_FINOPS", "Rule 2.4: Token Economics & Context Cache Hit Rate >= 50%"),
+                ("MONTE_CARLO_VAR", "Rule 2.5: Monte Carlo financial risk simulation (iterations >= 1000, VaR 95%, insolvency prob <= 5%)"),
             ],
             3: [
                 ("SPDX_2.3", "Rule 3.1: Validated open-source license identifiers from SPDX catalog"),
@@ -92,6 +95,8 @@ class StandardsLinter:
                 ("ISO_27701", "Rule 3.4: Privacy Information Management System controls"),
                 ("ISO_42001", "Rule 3.5: Artificial Intelligence Management System compliance"),
                 ("FSTEC_17_21_239", "Rule 3.6: Classification of GIS (K1-K3), ISPDN (UZ1-UZ4), and KII (Cat 1-3)"),
+                ("PP_1119_THREAT", "Rule 3.7: RF Government Decree № 1119 threat model and FSB SKZI class (KS1-KS3)"),
+                ("EU_AI_ACT_DOSSIER", "Rule 3.8: EU AI Act Article 14 Human Oversight and Article 15 Robustness Technical Dossier"),
             ],
             4: [
                 ("OWASP_ASVS_4.0", "Rule 4.1: Level 2 or Level 3 application security verification"),
@@ -100,6 +105,8 @@ class StandardsLinter:
                 ("GOST_R_56939_2024", "Rule 4.4: Secure software development lifecycle certification"),
                 ("OWASP_LLM_TOP10", "Rule 4.5: Prompt Injection Quarantine & Model Context Protocol (MCP)"),
                 ("FSTEC_17_21_239_SECURITY", "Rule 4.6: Information protection measures mapping to FSTEC 17/21/239"),
+                ("MITRE_ATLAS_AI", "Rule 4.7: MITRE ATLAS threat matrix covering AI system specific attacks"),
+                ("ISO_42001_SECURITY", "Rule 4.8: ISO/IEC 42001 active AI security controls"),
             ],
             5: [
                 ("OPENAPI_3.1", "Rule 5.1: Typed REST specification with bounded timeouts"),
@@ -108,6 +115,8 @@ class StandardsLinter:
                 ("C4_MODEL", "Rule 5.4: Hierarchical structural decomposition at Component level"),
                 ("AI_NATIVE_RAG", "Rule 5.5: RAG vector memory & 4-tier cognitive memory architecture"),
                 ("MADR_3.0", "Rule 5.6: Architectural Decision Records format and tradeoff documentation"),
+                ("ASYNCAPI_3.0", "Rule 5.7: AsyncAPI 3.0 event-driven message topics with CloudEvents 1.0 types"),
+                ("SELF_RAG_TOKENS", "Rule 5.8: Self-RAG reflection tokens ([Retrieve], [IsRel], [IsSup], [IsUse]) configuration"),
             ],
             6: [
                 ("IEC_61508_SIL", "Rule 6.1: Functional safety integrity level assignment"),
@@ -115,6 +124,7 @@ class StandardsLinter:
                 ("OPENVINO_METEOR_LAKE", "Rule 6.3: NPU Working Set RAM budget <= 512 MB and Latency <= 50 ms"),
                 ("THERAC_25_INTERLOCK", "Rule 6.4: Mandatory hardware interlocks when actuator latency > 1000 ms"),
                 ("FMEA_RPN", "Rule 6.5: Failure Mode and Effects Analysis Risk Priority Number <= 120"),
+                ("FTA_IEC_61025", "Rule 6.6: Fault Tree Analysis (FTA) logic gates and failure rate verification according to IEC 61025"),
             ],
             7: [
                 ("GOST_34.602_89", "Rule 7.1: All mandatory sections of Terms of Reference present"),
@@ -125,6 +135,7 @@ class StandardsLinter:
                 ("RAG_TRIAD_METRICS", "Rule 7.6: Cognitive RAG Triad (Relevance, Groundedness/Faithfulness >= 0.95)"),
                 ("GOST_19_201", "Rule 7.7: Software program documentation completeness according to GOST 19.201-78"),
                 ("SMT_FORMAL_PROOFS", "Rule 7.8: Formal mathematical proof certificates verified via Z3 SMT solver"),
+                ("MUTATION_MSI_85", "Rule 7.9: Mutation Testing with Mutation Score Indicator MSI >= 85%"),
             ],
             8: [
                 ("SPEC_TO_CODE_SYNTAX", "Rule 8.1: Valid AST and RFC 7807 error models in synthesized code"),
@@ -257,6 +268,38 @@ class StandardsLinter:
                 message="Mandatory document requisites according to GOST R 7.0.97-2016 are incomplete."
             ))
 
+        if not data.get("iso_29148_quality_attributes_verified", True):
+            v.append(StandardViolation(
+                standard_id="ISO_29148_ATTRIBUTES",
+                ministry_id=1,
+                rule="ISO 29148 Quality Attributes",
+                severity="WARNING",
+                message="iso_29148_quality_attributes_verified is False; 9 quality attributes not fully verified."
+            ))
+
+        ears = data.get("ears_requirements", [])
+        valid_patterns = {"UBIQUITOUS", "EVENT_DRIVEN", "STATE_DRIVEN", "UNWANTED_BEHAVIOR", "OPTIONAL_FEATURE"}
+        for ereq in ears:
+            if isinstance(ereq, dict):
+                pattern = ereq.get("pattern_type")
+                if pattern not in valid_patterns:
+                    v.append(StandardViolation(
+                        standard_id="ISO_29148_EARS",
+                        ministry_id=1,
+                        rule="EARS Pattern Classification",
+                        severity="ERROR",
+                        message=f"Requirement '{ereq.get('req_id')}' has invalid EARS pattern '{pattern}'."
+                    ))
+                text = str(ereq.get("text", "")).lower()
+                if not any(kw in text for kw in ("shall", "долж")):
+                    v.append(StandardViolation(
+                        standard_id="ISO_29148_EARS",
+                        ministry_id=1,
+                        rule="EARS Modal Syntax",
+                        severity="WARNING",
+                        message=f"EARS requirement '{ereq.get('req_id')}' lacks mandatory modal keyword 'shall' / 'должен'."
+                    ))
+
         return v
 
     def _lint_ministry_2_finance(self, data: Dict[str, Any]) -> List[StandardViolation]:
@@ -301,6 +344,38 @@ class StandardsLinter:
                     rule="AI FinOps Context Caching",
                     severity="WARNING",
                     message=f"Target context cache hit rate ({hit_rate}%) is below 50.0% threshold."
+                ))
+
+        mc = data.get("monte_carlo_config", {})
+        if isinstance(mc, dict):
+            iters = int(mc.get("iterations", 10000))
+            if iters < 1000:
+                v.append(StandardViolation(
+                    standard_id="MONTE_CARLO_VAR",
+                    ministry_id=2,
+                    rule="Monte Carlo Iteration Count",
+                    severity="ERROR",
+                    message=f"Monte Carlo iterations ({iters}) below required minimum 1,000."
+                ))
+
+        risk = data.get("risk_profile", {})
+        if isinstance(risk, dict):
+            insolv = float(risk.get("insolvency_probability_pct", 0.0))
+            if insolv > 5.0:
+                v.append(StandardViolation(
+                    standard_id="MONTE_CARLO_VAR",
+                    ministry_id=2,
+                    rule="Insolvency Risk Threshold",
+                    severity="CRITICAL",
+                    message=f"Insolvency probability ({insolv}%) strictly exceeds allowable 5.0% threshold."
+                ))
+            if not risk.get("monte_carlo_verified", True):
+                v.append(StandardViolation(
+                    standard_id="MONTE_CARLO_VAR",
+                    ministry_id=2,
+                    rule="Monte Carlo Attestation",
+                    severity="WARNING",
+                    message="monte_carlo_verified is False; financial risk profile unverified."
                 ))
 
         return v
@@ -378,6 +453,46 @@ class StandardsLinter:
                 message=f"Invalid FSTEC Order 239 KII category '{kii}'."
             ))
 
+        tm = data.get("pp_1119_threat_model", {})
+        if isinstance(tm, dict):
+            ttype = tm.get("threat_type", "ТИП_3")
+            if ttype not in ("ТИП_1", "ТИП_2", "ТИП_3"):
+                v.append(StandardViolation(
+                    standard_id="PP_1119_THREAT",
+                    ministry_id=3,
+                    rule="PP 1119 Threat Classification",
+                    severity="ERROR",
+                    message=f"Invalid PP 1119 threat type '{ttype}'. Must be ТИП_1, ТИП_2, or ТИП_3."
+                ))
+            skzi = tm.get("skzi_class", "КС2")
+            if skzi not in ("КС1", "КС2", "КС3", "КБ", "КА", "NONE"):
+                v.append(StandardViolation(
+                    standard_id="PP_1119_THREAT",
+                    ministry_id=3,
+                    rule="FSB SKZI Classification",
+                    severity="ERROR",
+                    message=f"Invalid FSB SKZI class '{skzi}'."
+                ))
+
+        dossier = data.get("eu_ai_act_dossier", {})
+        if isinstance(dossier, dict):
+            if not dossier.get("article_14_human_oversight", True):
+                v.append(StandardViolation(
+                    standard_id="EU_AI_ACT_DOSSIER",
+                    ministry_id=3,
+                    rule="EU AI Act Article 14 Human Oversight",
+                    severity="ERROR",
+                    message="Article 14 Human Oversight (Human-in-the-loop) must be enabled."
+                ))
+            if not dossier.get("article_15_robustness_accuracy", True):
+                v.append(StandardViolation(
+                    standard_id="EU_AI_ACT_DOSSIER",
+                    ministry_id=3,
+                    rule="EU AI Act Article 15 Robustness",
+                    severity="ERROR",
+                    message="Article 15 AI Robustness, Accuracy & Cybersecurity must be enabled."
+                ))
+
         return v
 
     def _lint_ministry_4_security(self, data: Dict[str, Any]) -> List[StandardViolation]:
@@ -413,6 +528,28 @@ class StandardsLinter:
                         severity="ERROR",
                         message=f"Invalid FSTEC BDU code '{ubi}'. Must conform to '^УБИ\\.\\d{{3}}$'."
                     ))
+
+        atlas = data.get("mitre_atlas_matrix", [])
+        for athreat in atlas:
+            if isinstance(athreat, dict):
+                tid = athreat.get("technique_id", "")
+                if not re.match(r"^AML\.T\d{4}(\.\d{3})?$", str(tid)):
+                    v.append(StandardViolation(
+                        standard_id="MITRE_ATLAS_AI",
+                        ministry_id=4,
+                        rule="MITRE ATLAS Technique Syntax",
+                        severity="ERROR",
+                        message=f"Invalid MITRE ATLAS technique ID '{tid}'. Must match '^AML\\.T\\d{{4}}(\\.\\d{{3}})?$'."
+                    ))
+
+        if not data.get("iso_42001_security_controls_active", True):
+            v.append(StandardViolation(
+                standard_id="ISO_42001_SECURITY",
+                ministry_id=4,
+                rule="ISO 42001 AI Security Controls",
+                severity="WARNING",
+                message="iso_42001_security_controls_active is False; AI security management controls inactive."
+            ))
 
         ai_sec = data.get("ai_security", {})
         if isinstance(ai_sec, dict):
@@ -559,6 +696,41 @@ class StandardsLinter:
                             message=f"ADR '{adr_id}' should document both positive and negative consequences."
                         ))
 
+        async_ver = data.get("asyncapi_version", "3.0.0")
+        if not str(async_ver).startswith("3."):
+            v.append(StandardViolation(
+                standard_id="ASYNCAPI_3.0",
+                ministry_id=5,
+                rule="AsyncAPI Specification Version",
+                severity="ERROR",
+                message=f"asyncapi_version must be 3.x, got '{async_ver}'."
+            ))
+
+        topics = data.get("async_topics", [])
+        for top in topics:
+            if isinstance(top, dict):
+                tname = top.get("topic_name", "")
+                if not re.match(r"^[a-zA-Z0-9_\-\.]+$", str(tname)):
+                    v.append(StandardViolation(
+                        standard_id="ASYNCAPI_3.0",
+                        ministry_id=5,
+                        rule="AsyncAPI Topic Naming",
+                        severity="ERROR",
+                        message=f"Invalid topic name '{tname}'."
+                    ))
+
+        self_rag = data.get("self_rag", {})
+        if isinstance(self_rag, dict):
+            thresh = float(self_rag.get("critique_threshold", 0.85))
+            if thresh < 0.5 or thresh > 1.0:
+                v.append(StandardViolation(
+                    standard_id="SELF_RAG_TOKENS",
+                    ministry_id=5,
+                    rule="Self-RAG Critique Threshold",
+                    severity="ERROR",
+                    message=f"Self-RAG critique threshold ({thresh}) is out of bounds [0.5, 1.0]."
+                ))
+
         return v
 
     def _lint_ministry_6_hardware(self, data: Dict[str, Any]) -> List[StandardViolation]:
@@ -611,6 +783,37 @@ class StandardsLinter:
                         severity="CRITICAL",
                         message=f"Failure mode '{fm.get('failure_mode_id')}' RPN ({max(rpn, calculated_rpn)}) exceeds allowable threshold ({max_rpn})."
                     ))
+
+        fta = data.get("fault_tree_analysis", [])
+        for fnode in fta:
+            if isinstance(fnode, dict):
+                nid = fnode.get("node_id", "")
+                if not re.match(r"^FTN-[A-Z0-9]+-\d+$", str(nid)):
+                    v.append(StandardViolation(
+                        standard_id="FTA_IEC_61025",
+                        ministry_id=6,
+                        rule="FTA Node Identifier Syntax",
+                        severity="ERROR",
+                        message=f"Invalid FTA node ID '{nid}'. Must match '^FTN-[A-Z0-9]+-\\d+$'."
+                    ))
+                gate = fnode.get("gate_type", "")
+                if gate not in ("AND", "OR", "BASIC_EVENT", "VOTE"):
+                    v.append(StandardViolation(
+                        standard_id="FTA_IEC_61025",
+                        ministry_id=6,
+                        rule="FTA Gate Classification",
+                        severity="ERROR",
+                        message=f"Invalid FTA gate type '{gate}'."
+                    ))
+
+        if not data.get("iec_61025_fta_verified", True):
+            v.append(StandardViolation(
+                standard_id="FTA_IEC_61025",
+                ministry_id=6,
+                rule="FTA IEC 61025 Attestation",
+                severity="WARNING",
+                message="iec_61025_fta_verified is False; fault tree analysis unverified."
+            ))
 
         return v
 
@@ -674,6 +877,27 @@ class StandardsLinter:
                     rule="Context Relevance",
                     severity="ERROR",
                     message=f"Context relevance score ({ctx_rel}) is below threshold 0.85."
+                ))
+
+        mut = data.get("mutation_testing", {})
+        if isinstance(mut, dict):
+            msi = float(mut.get("mutation_score_indicator_target_pct", 85.0))
+            if msi < 85.0:
+                v.append(StandardViolation(
+                    standard_id="MUTATION_MSI_85",
+                    ministry_id=7,
+                    rule="Mutation Score Indicator (MSI)",
+                    severity="ERROR",
+                    message=f"Target MSI ({msi}%) is strictly below 85.0% standard."
+                ))
+            survived = int(mut.get("survived_mutants_threshold", 0))
+            if survived > 5:
+                v.append(StandardViolation(
+                    standard_id="MUTATION_MSI_85",
+                    ministry_id=7,
+                    rule="Survived Mutants Tolerance",
+                    severity="WARNING",
+                    message=f"Survived mutants threshold ({survived}) exceeds recommended 0-5 tolerance."
                 ))
 
         if not data.get("gost_19_201_sections_present", True):
