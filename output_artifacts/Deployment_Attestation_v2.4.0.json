@@ -1,0 +1,38 @@
+{
+  "release_version": "v2.4.0",
+  "target_environment": "production-cluster-k8s",
+  "status": "SUCCESS_PROMOTED",
+  "stages_completed": [
+    {
+      "stage_name": "STAGE_10_CANARY",
+      "traffic_pct": 10,
+      "requests_simulated": 1000,
+      "p95_latency_ms": 12.5,
+      "error_rate_pct": 0.0,
+      "http_5xx_errors": 0,
+      "passed_slo": true
+    },
+    {
+      "stage_name": "STAGE_50_PROGRESSIVE",
+      "traffic_pct": 50,
+      "requests_simulated": 1000,
+      "p95_latency_ms": 18.2,
+      "error_rate_pct": 0.02,
+      "http_5xx_errors": 0,
+      "passed_slo": true
+    },
+    {
+      "stage_name": "STAGE_100_PRODUCTION",
+      "traffic_pct": 100,
+      "requests_simulated": 1000,
+      "p95_latency_ms": 24.1,
+      "error_rate_pct": 0.01,
+      "http_5xx_errors": 0,
+      "passed_slo": true
+    }
+  ],
+  "promoted_to_production": true,
+  "rollback_reason": null,
+  "attestation_seal": "b07c55a32f0ddd2dbcc3199fea15fc61bc169ac14a37264c159fb9ffe5317273",
+  "timestamp_epoch": 1790854814.5167162
+}
