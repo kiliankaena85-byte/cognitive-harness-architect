@@ -35,9 +35,14 @@ from .generators import (
     EuAiActDossierGenerator,
     SpiffeSpireGenerator,
     C4DslExporter,
+    OstEngine,
+    ModelCascadeOptimizer,
+    SpdxLicenseGuard,
+    DastCognitiveFuzzer,
+    SelfRagEngine,
 )
-from .hardware import OpenVinoDmaOptimizer
-from .quality import RagTriadEvaluator
+from .hardware import OpenVinoDmaOptimizer, ChaosFaultInjector
+from .quality import RagTriadEvaluator, GostPmiGenerator
 
 
 class McpToolDefinition(BaseModel):
@@ -56,7 +61,7 @@ class McpServer:
     """
 
     SERVER_NAME = "cognitive-harness-architect"
-    SERVER_VERSION = "2.2.0"
+    SERVER_VERSION = "2.3.0"
     PROTOCOL_VERSION = "2024-11-05"
 
     def __init__(
@@ -76,6 +81,13 @@ class McpServer:
         c4_dsl_exporter: Optional[C4DslExporter] = None,
         rag_triad_evaluator: Optional[RagTriadEvaluator] = None,
         openvino_dma_opt: Optional[OpenVinoDmaOptimizer] = None,
+        ost_engine: Optional[OstEngine] = None,
+        model_cascade_opt: Optional[ModelCascadeOptimizer] = None,
+        spdx_guard: Optional[SpdxLicenseGuard] = None,
+        dast_fuzzer: Optional[DastCognitiveFuzzer] = None,
+        self_rag_engine: Optional[SelfRagEngine] = None,
+        chaos_injector: Optional[ChaosFaultInjector] = None,
+        gost_pmi_gen: Optional[GostPmiGenerator] = None,
     ):
         self.memory: CognitiveMemoryStore = memory_store or CognitiveMemoryStore()
         self.linter: StandardsLinter = linter or StandardsLinter()
@@ -92,12 +104,19 @@ class McpServer:
         self.c4_dsl_exporter: C4DslExporter = c4_dsl_exporter or C4DslExporter()
         self.rag_triad_evaluator: RagTriadEvaluator = rag_triad_evaluator or RagTriadEvaluator()
         self.openvino_dma_opt: OpenVinoDmaOptimizer = openvino_dma_opt or OpenVinoDmaOptimizer()
+        self.ost_engine: OstEngine = ost_engine or OstEngine()
+        self.model_cascade_opt: ModelCascadeOptimizer = model_cascade_opt or ModelCascadeOptimizer()
+        self.spdx_guard: SpdxLicenseGuard = spdx_guard or SpdxLicenseGuard()
+        self.dast_fuzzer: DastCognitiveFuzzer = dast_fuzzer or DastCognitiveFuzzer()
+        self.self_rag_engine: SelfRagEngine = self_rag_engine or SelfRagEngine()
+        self.chaos_injector: ChaosFaultInjector = chaos_injector or ChaosFaultInjector()
+        self.gost_pmi_gen: GostPmiGenerator = gost_pmi_gen or GostPmiGenerator()
 
         self._tools: Dict[str, Tuple[McpToolDefinition, Callable[[Dict[str, Any]], Dict[str, Any]]]] = {}
         self._register_default_tools()
 
     def _register_default_tools(self) -> None:
-        """Registers the 16 core architectural and engineering tools."""
+        """Registers the 23 core architectural, engineering, and autonomous agent tools."""
 
         # 1. lint_specification
         self.register_tool(
@@ -382,6 +401,146 @@ class McpServer:
             self._handle_benchmark_openvino_dma,
         )
 
+        # 17. generate_opportunity_solution_tree
+        self.register_tool(
+            McpToolDefinition(
+                name="generate_opportunity_solution_tree",
+                description="Generates Teresa Torres Opportunity Solution Tree (OST) with Desired Outcome, Opportunities, Solutions, and Assumption Tests with DMN 1.4 Decision Table export.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "strategy_artifact": {"type": "object", "description": "StrategyCJMContract dictionary"},
+                        "project_id": {"type": "string", "default": "PROJ-COGNITIVE-001", "description": "Project ID"},
+                    },
+                    "required": ["strategy_artifact"],
+                },
+            ),
+            self._handle_generate_ost,
+        )
+
+        # 18. optimize_model_cascade
+        self.register_tool(
+            McpToolDefinition(
+                name="optimize_model_cascade",
+                description="Optimizes dynamic model routing across 4 tiers (Local NPU -> 4B SLM -> 70B Mid -> Frontier Reasoning) with prefix cache hit-rate simulation (R_cache >= 85%).",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "Prompt or query to route"},
+                        "simulate_workload": {"type": "boolean", "default": False, "description": "Run 1000-query workload simulation"},
+                        "queries_count": {"type": "integer", "default": 500, "description": "Queries count if simulating"},
+                    },
+                    "required": ["query"],
+                },
+            ),
+            self._handle_optimize_model_cascade,
+        )
+
+        # 19. scan_spdx_licenses
+        self.register_tool(
+            McpToolDefinition(
+                name="scan_spdx_licenses",
+                description="Generates OpenChain (ISO/IEC 5230) & SPDX 3.0 Software Bill of Materials (SBOM) and enforces strict legal veto on viral copyleft (AGPL/GPL).",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "dependencies": {
+                            "type": "array",
+                            "items": {"type": "object"},
+                            "description": "Optional list of dependency objects {name, version, license}",
+                        },
+                        "project_name": {"type": "string", "default": "Cognitive Harness Architect", "description": "Project name"},
+                    },
+                },
+            ),
+            self._handle_scan_spdx_licenses,
+        )
+
+        # 20. run_dast_cognitive_fuzzer
+        self.register_tool(
+            McpToolDefinition(
+                name="run_dast_cognitive_fuzzer",
+                description="Executes continuous DAST security fuzzing against FSTEC BDU threat catalog (УБИ.046, УБИ.062) and OWASP ASVS 4.0 Level 3, verifying sub-millisecond rejection.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "endpoints": {"type": "array", "items": {"type": "string"}, "description": "Target endpoints to fuzz"},
+                        "iterations": {"type": "integer", "default": 5, "description": "Fuzzing iterations per payload"},
+                    },
+                },
+            ),
+            self._handle_run_dast_fuzzer,
+        )
+
+        # 21. evaluate_self_rag_reflection
+        self.register_tool(
+            McpToolDefinition(
+                name="evaluate_self_rag_reflection",
+                description="Injects active Self-RAG reflection tokens ([Retrieve], [IsRel], [IsSup], [IsUse:1..5]) and executes beam filtering to eliminate hallucinations (< 0.1% error rate).",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "User intent query"},
+                        "draft_text": {"type": "string", "description": "Generated candidate draft text"},
+                        "contexts": {"type": "array", "items": {"type": "string"}, "description": "Retrieved context passages"},
+                    },
+                    "required": ["query", "draft_text"],
+                },
+            ),
+            self._handle_evaluate_self_rag,
+        )
+
+        # 22. run_chaos_fault_injection
+        self.register_tool(
+            McpToolDefinition(
+                name="run_chaos_fault_injection",
+                description="Simulates hardware faults, Therac-25 actuator delay spikes (8000ms), NPU RAM overflow (>512MB), and watchdog timeouts with Simplex fail-safe downscaling.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "fault_type": {
+                            "type": "string",
+                            "enum": ["ALL", "THERAC_LATENCY", "NPU_RAM", "WATCHDOG"],
+                            "default": "ALL",
+                            "description": "Specific fault scenario or full battery",
+                        },
+                    },
+                },
+            ),
+            self._handle_run_chaos_fault_injection,
+        )
+
+        # 23. generate_gost_pmi
+        self.register_tool(
+            McpToolDefinition(
+                name="generate_gost_pmi",
+                description="Synthesizes official Test Program and Methodology (ПМИ) conforming to ГОСТ 34.603-92 and ГОСТ 19.301-79 with SHA-256 digital commission seal.",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "strategy_artifact": {"type": "object", "description": "StrategyCJMContract dictionary"},
+                        "finance_artifact": {"type": "object", "description": "FinanceBudgetContract dictionary"},
+                        "legal_artifact": {"type": "object", "description": "LegalComplianceContract dictionary"},
+                        "security_artifact": {"type": "object", "description": "SecurityPolicyContract dictionary"},
+                        "analysis_artifact": {"type": "object", "description": "SystemAnalysisContract dictionary"},
+                        "hardware_artifact": {"type": "object", "description": "HardwareRuntimeContract dictionary"},
+                        "quality_artifact": {"type": "object", "description": "VVQualityContract dictionary"},
+                        "gost_standard": {
+                            "type": "string",
+                            "enum": ["ГОСТ 34.603-92", "ГОСТ 19.301-79", "ГИБРИДНЫЙ"],
+                            "default": "ГОСТ 34.603-92",
+                            "description": "Regulatory test standard",
+                        },
+                    },
+                    "required": [
+                        "strategy_artifact", "finance_artifact", "legal_artifact",
+                        "security_artifact", "analysis_artifact", "hardware_artifact", "quality_artifact"
+                    ],
+                },
+            ),
+            self._handle_generate_gost_pmi,
+        )
+
     def register_tool(
         self,
         definition: McpToolDefinition,
@@ -561,6 +720,88 @@ class McpServer:
         iters = int(args.get("iterations", 200))
         dim = int(args.get("tensor_dim", 1024))
         return self.openvino_dma_opt.benchmark_dma_vs_copy(iterations=iters, tensor_dim=dim)
+
+    def _handle_generate_ost(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        strat = args["strategy_artifact"]
+        pid = args.get("project_id", "PROJ-COGNITIVE-001")
+        tree = self.ost_engine.generate(strat, project_id=pid)
+        return {
+            "tree": tree.model_dump(),
+            "markdown": self.ost_engine.to_markdown(tree),
+            "dmn_table": self.ost_engine.to_dmn_decision_table(tree),
+        }
+
+    def _handle_optimize_model_cascade(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        q = args["query"]
+        sim = bool(args.get("simulate_workload", False))
+        if sim:
+            n = int(args.get("queries_count", 500))
+            rep = self.model_cascade_opt.simulate_workload(queries_count=n)
+            return {"simulation_report": rep.model_dump()}
+        decision = self.model_cascade_opt.route_query(q)
+        return {"decision": decision.model_dump()}
+
+    def _handle_scan_spdx_licenses(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        deps = args.get("dependencies")
+        pname = args.get("project_name", "Cognitive Harness Architect")
+        sbom = self.spdx_guard.generate_sbom(dependencies=deps, project_name=pname)
+        return {
+            "sbom": sbom.model_dump(),
+            "markdown": self.spdx_guard.to_markdown(sbom),
+        }
+
+    def _handle_run_dast_fuzzer(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        eps = args.get("endpoints")
+        iters = int(args.get("iterations", 5))
+        rep = self.dast_fuzzer.run_fuzz_campaign(target_endpoints=eps, iterations_per_payload=iters)
+        return {
+            "audit_report": rep.model_dump(),
+            "markdown": self.dast_fuzzer.to_markdown(rep),
+        }
+
+    def _handle_evaluate_self_rag(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        q = args["query"]
+        draft = args["draft_text"]
+        ctx = args.get("contexts", [])
+        output = self.self_rag_engine.critique_and_reflect(q, draft, ctx)
+        return {
+            "annotated_output": output.model_dump(),
+            "stream": self.self_rag_engine.to_annotated_stream(output),
+        }
+
+    def _handle_run_chaos_fault_injection(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        ftype = args.get("fault_type", "ALL")
+        if ftype == "THERAC_LATENCY":
+            res = self.chaos_injector.run_therac_latency_spike_experiment()
+            return {"experiment": res.model_dump()}
+        elif ftype == "NPU_RAM":
+            res = self.chaos_injector.run_npu_ram_overflow_experiment()
+            return {"experiment": res.model_dump()}
+        elif ftype == "WATCHDOG":
+            res = self.chaos_injector.run_watchdog_timeout_experiment()
+            return {"experiment": res.model_dump()}
+        rep = self.chaos_injector.run_full_chaos_campaign()
+        return {
+            "report": rep.model_dump(),
+            "markdown": self.chaos_injector.to_markdown(rep),
+        }
+
+    def _handle_generate_gost_pmi(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        std = args.get("gost_standard", "ГОСТ 34.603-92")
+        doc = self.gost_pmi_gen.generate(
+            strategy_artifact=args["strategy_artifact"],
+            finance_artifact=args["finance_artifact"],
+            legal_artifact=args["legal_artifact"],
+            security_artifact=args["security_artifact"],
+            analysis_artifact=args["analysis_artifact"],
+            hardware_artifact=args["hardware_artifact"],
+            quality_artifact=args["quality_artifact"],
+            gost_standard=std,
+        )
+        return {
+            "pmi_document": doc.model_dump(),
+            "markdown": self.gost_pmi_gen.to_markdown(doc),
+        }
 
     # =========================================================================
     # JSON-RPC 2.0 Protocol Dispatcher

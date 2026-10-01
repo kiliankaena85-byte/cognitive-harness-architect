@@ -1,8 +1,15 @@
 """
 core/hardware package: Hardware Runtime, Edge NPU & SRE Optimizers.
-Universal Cognitive Decomposition Engine (UCDE) - Wave 2
+Universal Cognitive Decomposition Engine (UCDE) - Waves 2 & 3
 """
 
 from .openvino_dma import DmaBufferDescriptor, OpenVinoDmaOptimizer
+from .chaos_fault_injection import ChaosExperimentResult, ChaosResiliencyReport, ChaosFaultInjector
 
-__all__ = ["DmaBufferDescriptor", "OpenVinoDmaOptimizer"]
+__all__ = [
+    "DmaBufferDescriptor",
+    "OpenVinoDmaOptimizer",
+    "ChaosExperimentResult",
+    "ChaosResiliencyReport",
+    "ChaosFaultInjector",
+]
