@@ -59,7 +59,7 @@
   },
   "cryptographic_release_signature": "7a8176bbc716f8948e4c2e317f7f20d5bb9b81cebb8155ff5333b0648b38196c",
   "intent_file": null,
-  "manifest_version": "1.1.0",
+  "manifest_version": "2.0.0",
   "pipeline_status": "SUCCESS",
   "standards_compliance": {
     "all_compliant": true,
